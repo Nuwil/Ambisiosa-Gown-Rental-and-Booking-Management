@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import Icon from '../../components/ui/Icon.jsx';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api/client.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
 import { TransactionDetail, TransactionFilters, TransactionsTable } from '../../components/TransactionViews.jsx';
 import { Button, ConfirmDialog } from '../../components/ui/Controls.jsx';
 import { Badge, PageHeader, Section, StatCard, StatGrid } from '../../components/ui/Display.jsx';
+import DocumentCard from '../../components/ui/DocumentCard.jsx';
 import { Async } from '../../components/ui/Feedback.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { fmtDate, peso } from '../../lib/format.js';
@@ -37,22 +39,25 @@ export default function CustomerProfilePage() {
     <Async state={customer}>
       {(c) => (
         <>
-          <p className="mb-2 text-sm"><Link to="/owner/customers" className="text-brand-700 hover:underline dark:text-brand-300">← Customers</Link></p>
+          <p className="mb-4 text-sm"><Link to="/owner/customers" className="group inline-flex items-center gap-1.5 text-slate-500 transition-colors hover:text-slate-900 dark:hover:text-white"><Icon name="arrow-left" className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5" />Customers</Link></p>
           <PageHeader title={c.name} subtitle={`Customer since ${fmtDate(c.created_at)}`}
             actions={<><Button variant="secondary" onClick={() => setEditing(true)}>Edit</Button>{isOwner && <Button variant="secondary" className="text-red-600" onClick={() => setDeleting(true)}>Delete</Button>}</>} />
-          <div className="mb-5 grid gap-5 lg:grid-cols-3">
-            <Section title="Personal information" className="lg:col-span-2">
-              <dl className="grid gap-4 text-sm sm:grid-cols-2">
-                {[['Full name', c.name], ['Contact number', c.phone || '—'], ['Email', c.email || '—'], ['Address', c.address || '—'], ['Registered', fmtDate(c.created_at)]].map(([k, v]) => <div key={k}><dt className="text-xs text-slate-500">{k}</dt><dd className="font-medium">{v}</dd></div>)}
+          <StatGrid className="mb-5 !grid-cols-1 sm:!grid-cols-3">
+            <StatCard label="Transactions" value={c.total_transactions} />
+            <StatCard label="Total paid" value={peso(c.total_paid)} />
+            <StatCard label="Overdue" value={c.overdue_count} tone={c.overdue_count ? 'danger' : undefined} />
+          </StatGrid>
+          {/* 1 column on phones, info full-width + two documents side by side on lg, three equal columns on xl. */}
+          <div className="mb-5 grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
+            <Section title="Personal information" className="lg:col-span-2 xl:col-span-1">
+              <dl className="grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-1">
+                {[['Full name', c.name], ['Contact number', c.phone || '—'], ['Email', c.email || '—'], ['Address', c.address || '—'], ['Registered', fmtDate(c.created_at)]].map(([k, v]) => <div key={k} className="min-w-0"><dt className="text-xs text-slate-500">{k}</dt><dd className="break-words font-medium">{v}</dd></div>)}
                 <div><dt className="text-xs text-slate-500">Account type</dt><dd><Badge tone={c.user_id ? 'violet' : 'gray'}>{c.user_id ? 'Linked renter account' : 'Walk-in customer'}</Badge></dd></div>
-                {c.notes && <div className="sm:col-span-2"><dt className="text-xs text-slate-500">Notes</dt><dd className="whitespace-pre-line">{c.notes}</dd></div>}
+                {c.notes && <div className="sm:col-span-2 lg:col-span-3 xl:col-span-1"><dt className="text-xs text-slate-500">Notes</dt><dd className="whitespace-pre-line">{c.notes}</dd></div>}
               </dl>
             </Section>
-            <StatGrid>
-              <StatCard label="Transactions" value={c.total_transactions} />
-              <StatCard label="Total paid" value={peso(c.total_paid)} />
-              <StatCard label="Overdue" value={c.overdue_count} tone={c.overdue_count ? 'danger' : undefined} />
-            </StatGrid>
+            <DocumentCard title="Valid ID" icon="id-card" url={c.valid_id_url} emptyHint="No Valid ID has been uploaded for this customer." />
+            <DocumentCard title="Signed contract" icon="contract" url={c.signed_contract_url} emptyHint="No signed contract has been uploaded yet." />
           </div>
           <Section title="Rental & purchase history" flush>
             <TransactionFilters value={filters} onChange={setFilters} categories={categories.data} />

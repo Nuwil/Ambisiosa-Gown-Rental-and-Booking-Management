@@ -6,6 +6,7 @@ import AppLayout from './layouts/AppLayout.jsx';
 import { PageSpinner } from './components/ui/Feedback.jsx';
 import { LoginPage, RegisterPage } from './features/auth/AuthPages.jsx';
 import { AdminDashboard, OwnerDashboard, RenterDashboard } from './features/shared/Dashboards.jsx';
+import LandingPage from './landing/LandingPage.jsx';
 import StaffPage from './features/owner/StaffPage.jsx';
 import SettingsPage from './features/shared/SettingsPage.jsx';
 import CustomersPage from './features/owner/CustomersPage.jsx';
@@ -33,7 +34,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/" element={<RootRedirect />} />
+        <Route path="/" element={<LandingPage />} />
 
         <Route element={<ProtectedRoute roles={['admin']} />}>
           <Route path="/admin" element={<AppLayout />}>

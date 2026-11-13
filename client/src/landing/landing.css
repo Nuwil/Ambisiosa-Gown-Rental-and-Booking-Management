@@ -1,0 +1,58 @@
+@reference "../index.css";
+
+@theme {
+  --color-paper: #f5f2eb;
+  --color-paper-2: #ece8df;
+  --color-card: #fdfcf9;
+  --color-line: #d8d2c4;
+  --color-ink: #1a1916;
+  --color-ink-2: #43403a;
+  --color-muted: #6c675b;
+  --color-accent: #8f2f33;
+}
+
+.landing-page {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.landing-page .eyebrow {
+  @apply text-[11px] font-medium uppercase tracking-[0.16em] text-muted;
+}
+
+.landing-page .btn-primary,
+.landing-page .btn-outline {
+  @apply inline-flex items-center justify-center gap-2.5 rounded-none border px-6 py-3.5 text-sm font-semibold transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-60;
+}
+
+.landing-page .btn-primary {
+  @apply border-ink bg-ink text-paper hover:bg-transparent hover:text-ink;
+}
+
+.landing-page .btn-outline {
+  @apply border-ink bg-transparent text-ink hover:bg-ink hover:text-paper;
+}
+
+.landing-page .field {
+  @apply w-full rounded-none border border-ink/30 bg-card px-3.5 py-3 text-sm text-ink transition-colors duration-200 placeholder:text-muted/70 hover:border-ink/60 focus:border-ink focus:outline-none;
+}
+
+.landing-page .container-x {
+  @apply mx-auto w-full max-w-7xl px-5 sm:px-8;
+}
+
+.landing-page :focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page *,
+  .landing-page *::before,
+  .landing-page *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

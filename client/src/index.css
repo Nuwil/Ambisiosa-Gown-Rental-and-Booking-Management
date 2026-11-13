@@ -1,30 +1,93 @@
 @import 'tailwindcss';
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * Design tokens. The existing `slate-*` and `brand-*` utilities are re-pointed at a warm ink/bone neutral
+ * scale and a single oxblood accent, so every page picks up the palette without per-file edits.
+ * Light: bone paper + ink. Dark: warm near-black + bone text. The accent is used sparingly (focus, active, links).
+ */
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --color-brand-50: #f5f3ff;
-  --color-brand-100: #ede9fe;
-  --color-brand-200: #ddd6fe;
-  --color-brand-300: #c4b5fd;
-  --color-brand-400: #a78bfa;
-  --color-brand-500: #8b5cf6;
-  --color-brand-600: #7c3aed;
-  --color-brand-700: #6d28d9;
-  --color-brand-800: #5b21b6;
+  --font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Corner radius: nothing below 5px; containers get a touch more than controls.
+     rounded-full is left alone for avatars, status pills, swatches and spinners. */
+  --radius-xs: 5px;
+  --radius-sm: 5px;
+  --radius-md: 5px;
+  --radius-lg: 5px;
+  --radius-xl: 6px;
+  --radius-2xl: 6px;
+  --radius-3xl: 6px;
+
+  --color-white: #fdfcf9;
+  --color-slate-50: #f5f2eb;
+  --color-slate-100: #ece8df;
+  --color-slate-200: #e0dbd0;
+  --color-slate-300: #cdc7ba;
+  --color-slate-400: #a39d8f;
+  --color-slate-500: #7c776b;
+  --color-slate-600: #5c584e;
+  --color-slate-700: #43403a;
+  --color-slate-800: #2b2925;
+  --color-slate-900: #1a1916;
+  --color-slate-950: #0f0e0c;
+
+  --color-brand-50: #fbf1f0;
+  --color-brand-100: #f6e0dd;
+  --color-brand-200: #ecc3be;
+  --color-brand-300: #de9a93;
+  --color-brand-400: #cc6c64;
+  --color-brand-500: #b04a45;
+  --color-brand-600: #8f2f33;
+  --color-brand-700: #75262a;
+  --color-brand-800: #5c2024;
 }
 
 @layer base {
+  :root {
+    --chart-1: #8f2f33; --chart-2: #2f5d62; --chart-3: #b8893b; --chart-4: #5b6b8c;
+    --chart-5: #7a8f5a; --chart-6: #a2607d; --chart-7: #3d3a34; --chart-8: #b9b1a0;
+    --chart-surface: #fdfcf9; --chart-border: #e0dbd0; --chart-fg: #2b2925;
+  }
+  html.dark {
+    --chart-1: #e08a82; --chart-2: #6fb0b3; --chart-3: #e0b567; --chart-4: #93a3c7;
+    --chart-5: #a9bf86; --chart-6: #d393b0; --chart-7: #d8d2c4; --chart-8: #7c776b;
+    --chart-surface: #1a1916; --chart-border: #2b2925; --chart-fg: #e0dbd0;
+  }
   html { color-scheme: light; }
   html.dark { color-scheme: dark; }
-  body { @apply bg-slate-50 text-slate-800 antialiased dark:bg-slate-950 dark:text-slate-200; }
-  :focus-visible { @apply outline-2 outline-offset-2 outline-brand-500; }
+  body { @apply bg-slate-50 text-slate-800 antialiased dark:bg-slate-950 dark:text-slate-200; font-feature-settings: 'cv11', 'ss01'; }
+  h1, h2, h3 { letter-spacing: -0.011em; }
+  ::selection { background: var(--color-brand-200); color: var(--color-slate-900); }
+  :focus-visible { @apply outline-2 outline-offset-2 outline-brand-600 dark:outline-brand-300; }
 }
 
 @layer components {
-  .card { @apply rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900; }
-  .input { @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100; }
-  .label { @apply mb-1 block text-xs font-medium text-slate-600 dark:text-slate-400; }
-  .th { @apply whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400; }
+  .card { @apply rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900; }
+  /* Interactive tiles: border sharpens and the tile lifts 2px; nothing else moves. */
+  .card-hover { transition: border-color 0.25s var(--ease-soft), transform 0.25s var(--ease-soft); }
+  .card-hover:hover { @apply border-slate-400 dark:border-slate-600; transform: translateY(-2px); }
+  .input { @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 transition-colors duration-200 placeholder:text-slate-400 hover:border-slate-400 focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-500 dark:focus:border-slate-200 dark:focus:ring-slate-200; }
+  .label { @apply mb-1.5 block text-xs font-medium text-slate-500 dark:text-slate-400; }
+  .eyebrow { @apply text-[11px] font-medium uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400; }
+  .th { @apply whitespace-nowrap px-4 py-3 text-left text-[11px] font-medium uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400; }
   .td { @apply px-4 py-3 text-sm; }
+}
+
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.page-enter { animation: rise 0.45s var(--ease-soft) both; }
+/* Bento tiles settle in with a short stagger. */
+.bento > * { animation: rise 0.5s var(--ease-soft) both; }
+.bento > :nth-child(2) { animation-delay: 0.04s; }
+.bento > :nth-child(3) { animation-delay: 0.08s; }
+.bento > :nth-child(4) { animation-delay: 0.12s; }
+.bento > :nth-child(5) { animation-delay: 0.16s; }
+.bento > :nth-child(6) { animation-delay: 0.2s; }
+.bento > :nth-child(n + 7) { animation-delay: 0.24s; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0s !important; transition-duration: 0.01ms !important; }
+  .card-hover:hover { transform: none; }
 }

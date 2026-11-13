@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api/client.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
-import { Button, ConfirmDialog, Input, Textarea } from '../../components/ui/Controls.jsx';
+import { Button, ConfirmDialog, Input, Stepper, Textarea } from '../../components/ui/Controls.jsx';
+import Icon from '../../components/ui/Icon.jsx';
 import { Badge, PageHeader, TypeBadge } from '../../components/ui/Display.jsx';
 import { Async, EmptyState } from '../../components/ui/Feedback.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
@@ -10,21 +11,13 @@ import { cx, peso, todayISO } from '../../lib/format.js';
 import { useFetch } from '../../lib/useFetch.js';
 import { useCart } from './CartContext.jsx';
 
-const Stepper = ({ value, max, onChange, disabled }) => (
-  <div className="inline-flex items-center rounded-lg border border-slate-300 dark:border-slate-700">
-    <button type="button" aria-label="Decrease quantity" disabled={disabled || value <= 1} onClick={() => onChange(value - 1)} className="px-2.5 py-1 text-lg leading-none hover:bg-slate-100 disabled:opacity-40 dark:hover:bg-slate-800">−</button>
-    <span className="w-8 text-center text-sm font-medium tabular-nums">{value}</span>
-    <button type="button" aria-label="Increase quantity" disabled={disabled || value >= max} onClick={() => onChange(value + 1)} className="px-2.5 py-1 text-lg leading-none hover:bg-slate-100 disabled:opacity-40 dark:hover:bg-slate-800">+</button>
-  </div>
-);
-
 function Line({ l, selected, onSelect, onPatch, onRemove, busy }) {
   const max = Math.max(l.quantity, Math.min(100, l.available || l.quantity));
   return (
-    <li className={cx('flex gap-3 p-3 sm:p-4', l.issue && 'bg-amber-50/60 dark:bg-amber-900/10')}>
-      <input type="checkbox" aria-label={`Select ${l.item_name}`} className="mt-1 h-4 w-4 shrink-0 accent-brand-600" checked={selected} onChange={(e) => onSelect(e.target.checked)} />
+    <li className={cx('flex gap-3 p-3 sm:p-4', l.issue && 'bg-amber-50/60 dark:bg-amber-950/20')}>
+      <input type="checkbox" aria-label={`Select ${l.item_name}`} className="mt-1 h-4 w-4 shrink-0 accent-slate-900 dark:accent-slate-100" checked={selected} onChange={(e) => onSelect(e.target.checked)} />
       <Link to={`/renter/items/${l.item_id}`} className="h-24 w-20 shrink-0 overflow-hidden rounded-lg bg-slate-100 sm:h-28 sm:w-24 dark:bg-slate-800">
-        {l.image_url ? <img src={l.image_url} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-xl font-semibold text-brand-300">{l.item_name.slice(0, 2).toUpperCase()}</div>}
+        {l.image_url ? <img src={l.image_url} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center font-display text-3xl text-slate-400">{l.item_name.slice(0, 2).toUpperCase()}</div>}
       </Link>
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
@@ -42,13 +35,13 @@ function Line({ l, selected, onSelect, onPatch, onRemove, busy }) {
             <label className="text-xs text-slate-500">To<input type="date" min={l.start_date} value={l.expected_return} disabled={busy} aria-label="Return date"
               onChange={(e) => e.target.value && onPatch({ expected_return: e.target.value })} className="input !w-auto !py-1 text-sm" /></label>
           </>)}
-          <Stepper value={l.quantity} max={max} disabled={busy} onChange={(quantity) => onPatch({ quantity })} />
+          <Stepper size="sm" value={l.quantity} max={max} disabled={busy} onChange={(quantity) => onPatch({ quantity })} />
           <span className="text-xs text-slate-500">
             {l.unit_price != null && (l.type === 'rental' ? `${peso(l.unit_price)}/day × ${l.days ?? '–'} day${l.days === 1 ? '' : 's'}` : `${peso(l.unit_price)} each`)}
           </span>
           <button type="button" onClick={onRemove} className="ml-auto text-xs font-medium text-red-600 hover:underline">Remove</button>
         </div>
-        {l.issue && <p role="alert" className="mt-2 text-xs font-medium text-amber-700 dark:text-amber-400">⚠ {l.issue}</p>}
+        {l.issue && <p role="alert" className="mt-2 flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-400"><Icon name="alert" className="h-3.5 w-3.5 shrink-0" />{l.issue}</p>}
       </div>
     </li>
   );
@@ -112,11 +105,11 @@ export default function CartPage() {
           </div>
         ) : (
           <div className="grid items-start gap-5 lg:grid-cols-[1fr_22rem]">
-            <section className="rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900" aria-label="Cart items">
+            <section className="card" aria-label="Cart items">
               <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-4 py-2.5 text-sm dark:border-slate-800">
-                <label className="flex items-center gap-2 font-medium"><input type="checkbox" className="h-4 w-4 accent-brand-600" checked={allSelected} onChange={(e) => setSelected(new Set(e.target.checked ? cart.lines.map((l) => l.id) : []))} />
+                <label className="flex items-center gap-2 font-medium"><input type="checkbox" className="h-4 w-4 accent-slate-900 dark:accent-slate-100" checked={allSelected} onChange={(e) => setSelected(new Set(e.target.checked ? cart.lines.map((l) => l.id) : []))} />
                   Select all <span className="font-normal text-slate-500">({chosen.length}/{cart.lines.length})</span></label>
-                <button className="text-xs font-medium text-red-600 hover:underline" onClick={() => setConfirm({ all: true })}>Clear cart</button>
+                <button className="text-xs font-medium text-red-700 hover:underline dark:text-red-400" onClick={() => setConfirm({ all: true })}>Clear cart</button>
               </div>
               <ul className="divide-y divide-slate-200 dark:divide-slate-800">
                 {cart.lines.map((l) => (
@@ -126,19 +119,19 @@ export default function CartPage() {
               </ul>
             </section>
 
-            <aside className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 lg:sticky lg:top-20 dark:border-slate-800 dark:bg-slate-900" aria-label="Order summary">
-              <h2 className="font-semibold">Summary</h2>
+            <aside className="card space-y-3 p-5 lg:sticky lg:top-20" aria-label="Order summary">
+              <h2 className="eyebrow">Summary</h2>
               <dl className="space-y-1.5 text-sm">
                 {chosen.map((l) => (<div key={l.id} className="flex justify-between gap-3"><dt className="min-w-0 truncate text-slate-500">{l.item_name} ({l.size}) × {l.quantity}</dt><dd className="tabular-nums">{peso(l.line_total)}</dd></div>))}
                 {!chosen.length && <p className="text-slate-500">Select items to include.</p>}
               </dl>
               <div className="flex items-baseline justify-between border-t border-slate-200 pt-3 dark:border-slate-800">
-                <span className="text-sm text-slate-500">Estimated total</span><strong className="text-xl tabular-nums">{peso(subtotal)}</strong>
+                <span className="text-sm text-slate-500">Estimated total</span><strong className="font-display text-3xl font-normal tabular-nums">{peso(subtotal)}</strong>
               </div>
               {hasPurchase && <div className="grid gap-2"><Input label="Contact number" value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} /><Input label="Address" value={contact.address} onChange={(e) => setContact({ ...contact, address: e.target.value })} /></div>}
               <Textarea label="Note to the shops (optional)" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
               {blocked.length > 0 && <Badge tone="amber">Fix or deselect {blocked.length} item{blocked.length === 1 ? '' : 's'} with warnings</Badge>}
-              {error && <p role="alert" className="rounded-lg bg-red-50 p-2.5 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">{error}</p>}
+              {error && <p role="alert" className="rounded-lg border border-red-300 bg-red-50 p-2.5 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300">{error}</p>}
               <Button className="w-full !py-3" loading={busy} disabled={!chosen.length || blocked.length > 0} onClick={checkout}>Send {chosen.length || ''} request{chosen.length === 1 ? '' : 's'}</Button>
               <p className="text-center text-xs text-slate-500">Nothing is charged now. If any item became unavailable, none are sent and your cart stays as is.</p>
             </aside>

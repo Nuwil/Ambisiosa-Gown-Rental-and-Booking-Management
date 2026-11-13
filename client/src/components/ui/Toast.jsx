@@ -1,8 +1,11 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { cx } from '../../lib/format.js';
+import Icon from './Icon.jsx';
 
 const ToastCtx = createContext(null);
 export const useToast = () => useContext(ToastCtx);
+
+const ICON = { success: ['check', 'text-emerald-700 dark:text-emerald-400'], error: ['alert', 'text-red-700 dark:text-red-400'], info: ['info', 'text-slate-500'] };
 
 export function ToastProvider({ children }) {
   const [items, setItems] = useState([]);
@@ -18,16 +21,18 @@ export function ToastProvider({ children }) {
     <ToastCtx.Provider value={api}>
       {children}
       <div className="pointer-events-none fixed inset-x-0 bottom-4 z-[100] flex flex-col items-center gap-2 px-4 sm:items-end sm:pr-6" aria-live="polite">
-        {items.map((t) => (
-          <div key={t.id} role={t.type === 'error' ? 'alert' : 'status'}
-            className={cx('pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg border px-4 py-3 text-sm shadow-lg',
-              t.type === 'success' && 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200',
-              t.type === 'error' && 'border-red-200 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950 dark:text-red-200',
-              t.type === 'info' && 'border-slate-200 bg-white text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100')}>
-            <span className="flex-1">{t.message}</span>
-            <button onClick={() => remove(t.id)} className="text-lg leading-none opacity-60 hover:opacity-100" aria-label="Dismiss">×</button>
-          </div>
-        ))}
+        {items.map((t) => {
+          const [icon, tone] = ICON[t.type];
+          return (
+            <div key={t.id} role={t.type === 'error' ? 'alert' : 'status'}
+              className={cx('page-enter pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border bg-white px-4 py-3 text-sm text-slate-800 shadow-lg shadow-slate-900/5 dark:bg-slate-900 dark:text-slate-100',
+                t.type === 'error' ? 'border-red-300 dark:border-red-900' : 'border-slate-200 dark:border-slate-700')}>
+              <Icon name={icon} className={cx('mt-0.5 h-4 w-4 shrink-0', tone)} strokeWidth={2} />
+              <span className="flex-1">{t.message}</span>
+              <button onClick={() => remove(t.id)} className="text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-white" aria-label="Dismiss"><Icon name="close" className="h-4 w-4" /></button>
+            </div>
+          );
+        })}
       </div>
     </ToastCtx.Provider>
   );

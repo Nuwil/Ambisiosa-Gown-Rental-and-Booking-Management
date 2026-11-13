@@ -1,10 +1,11 @@
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ComposedChart, Legend, Line, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { peso, num } from '../../lib/format.js';
 
-export const COLORS = ['#7c3aed', '#0d9488', '#d97706', '#e11d48', '#0284c7', '#65a30d', '#c026d3', '#475569'];
+// Series colours are CSS variables (see index.css) so charts follow light/dark without re-rendering.
+export const COLORS = Array.from({ length: 8 }, (_, i) => `var(--chart-${i + 1})`);
 const tick = { fill: 'currentColor', fontSize: 12 };
-const grid = <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.12} vertical={false} />;
-const tooltipStyle = { borderRadius: 8, border: '1px solid rgba(148,163,184,.4)', fontSize: 12 };
+const grid = <CartesianGrid strokeDasharray="2 4" stroke="currentColor" strokeOpacity={0.18} vertical={false} />;
+const tooltipStyle = { borderRadius: 6, border: '1px solid var(--chart-border)', background: 'var(--chart-surface)', color: 'var(--chart-fg)', boxShadow: 'none', fontSize: 12, padding: '8px 12px' };
 
 const Frame = ({ height = 260, children }) => (
   <div className="text-slate-500 dark:text-slate-400" style={{ height }}>
@@ -30,7 +31,7 @@ export function TrendChart({ data, xKey, series, money, height, stacked }) {
         {series.length > 1 && <Legend wrapperStyle={{ fontSize: 12 }} />}
         {series.map((s, i) => (
           <Area key={s.key} type="monotone" dataKey={s.key} name={s.name} stackId={stacked ? 'a' : undefined}
-            stroke={s.color || COLORS[i]} fill={s.color || COLORS[i]} fillOpacity={0.15} strokeWidth={2} />
+            stroke={s.color || COLORS[i]} fill={s.color || COLORS[i]} fillOpacity={0.1} strokeWidth={1.5} />
         ))}
       </AreaChart>
     </Frame>
@@ -50,7 +51,7 @@ export function SimpleBar({ data, xKey, series, horizontal, height = 260, money 
         )}
         <Tooltip contentStyle={tooltipStyle} formatter={(v) => (money ? peso(v) : num(v))} cursor={{ fill: 'currentColor', fillOpacity: 0.06 }} />
         {series.length > 1 && <Legend wrapperStyle={{ fontSize: 12 }} />}
-        {series.map((s, i) => <Bar key={s.key} dataKey={s.key} name={s.name} fill={s.color || COLORS[i]} radius={[4, 4, 0, 0]} maxBarSize={36} />)}
+        {series.map((s, i) => <Bar key={s.key} dataKey={s.key} name={s.name} fill={s.color || COLORS[i]} radius={[5, 5, 0, 0]} maxBarSize={32} />)}
       </BarChart>
     </Frame>
   );
@@ -62,7 +63,7 @@ export function Donut({ data, nameKey = 'name', valueKey = 'value', height = 240
   return (
     <Frame height={height}>
       <PieChart>
-        <Pie data={rows} dataKey={valueKey} nameKey={nameKey} innerRadius="55%" outerRadius="85%" paddingAngle={2} stroke="none">
+        <Pie data={rows} dataKey={valueKey} nameKey={nameKey} innerRadius="55%" outerRadius="85%" paddingAngle={3} stroke="none">
           {rows.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
         </Pie>
         <Tooltip contentStyle={tooltipStyle} />
@@ -91,9 +92,9 @@ export function ForecastChart({ result, money, height = 260, label = 'Value' }) 
         <YAxis tick={tick} tickLine={false} axisLine={false} width={money ? 64 : 36} tickFormatter={money ? (v) => (v >= 1000 ? `${v / 1000}k` : v) : undefined} />
         <Tooltip contentStyle={tooltipStyle} formatter={(v, n) => (Array.isArray(v) ? `${fmt(v[0])} – ${fmt(v[1])}` : fmt(v))} />
         <Legend wrapperStyle={{ fontSize: 12 }} />
-        <Area dataKey="band" name="Estimate range" stroke="none" fill="#d97706" fillOpacity={0.15} legendType="none" />
-        <Line type="monotone" dataKey="actual" name={`Actual ${label}`} stroke="#7c3aed" strokeWidth={2} dot={false} />
-        <Line type="monotone" dataKey="predicted" name={`Predicted ${label} (estimate)`} stroke="#d97706" strokeWidth={2} strokeDasharray="6 4" dot={{ r: 3 }} />
+        <Area dataKey="band" name="Estimate range" stroke="none" fill="var(--chart-3)" fillOpacity={0.14} legendType="none" />
+        <Line type="monotone" dataKey="actual" name={`Actual ${label}`} stroke="var(--chart-1)" strokeWidth={1.5} dot={false} />
+        <Line type="monotone" dataKey="predicted" name={`Predicted ${label} (estimate)`} stroke="var(--chart-3)" strokeWidth={1.5} strokeDasharray="6 4" dot={{ r: 3 }} />
       </ComposedChart>
     </Frame>
   );

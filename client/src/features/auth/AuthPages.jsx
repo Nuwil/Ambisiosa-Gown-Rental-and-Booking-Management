@@ -5,16 +5,25 @@ import { Button, Input } from '../../components/ui/Controls.jsx';
 
 function Shell({ title, subtitle, children, footer }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-50 via-white to-slate-100 px-4 py-10 dark:from-slate-950 dark:via-slate-950 dark:to-brand-800/20">
-      <div className="w-full max-w-md">
-        <p className="mb-6 text-center text-2xl font-semibold tracking-tight text-brand-700 dark:text-brand-300">Atelier Rentals</p>
-        <div className="card p-6 shadow-lg sm:p-8">
-          <h1 className="text-xl font-semibold">{title}</h1>
-          <p className="mb-6 mt-1 text-sm text-slate-500">{subtitle}</p>
-          {children}
+    <div className="grid min-h-screen lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)]">
+      <aside className="hidden flex-col justify-between bg-slate-900 p-14 text-slate-100 lg:flex dark:border-r dark:border-slate-800 dark:bg-slate-900">
+        <p className="font-display text-3xl font-normal">Ambisiosa</p>
+        <div>
+          <span className="mb-6 block h-px w-12 bg-brand-300" aria-hidden="true" />
+          <p className="max-w-md font-display text-5xl font-normal leading-[1.08]">Gowns, suits, costumes and traditional wear.</p>
+          <p className="mt-5 max-w-sm text-sm text-slate-400">Rent by the day or buy, with every booking tracked from request to return.</p>
         </div>
-        <p className="mt-4 text-center text-sm text-slate-500">{footer}</p>
-      </div>
+        <p className="text-xs text-slate-500">Rental and booking management</p>
+      </aside>
+      <main className="flex items-center justify-center px-6 py-12">
+        <div className="page-enter w-full max-w-sm">
+          <p className="mb-10 font-display text-2xl font-normal lg:hidden">Ambisiosa</p>
+          <h1 className="font-display text-4xl font-normal tracking-tight">{title}</h1>
+          <p className="mb-8 mt-2 text-sm text-slate-500">{subtitle}</p>
+          {children}
+          <p className="mt-8 text-sm text-slate-500">{footer}</p>
+        </div>
+      </main>
     </div>
   );
 }
@@ -38,11 +47,11 @@ export function LoginPage() {
   };
 
   return (
-    <Shell title="Welcome back" subtitle="Sign in to manage or book rentals." footer={<>New renter? <Link className="font-medium text-brand-600 hover:underline" to="/register">Create an account</Link></>}>
+    <Shell title="Welcome back" subtitle="Sign in to manage or book rentals." footer={<>New renter? <Link className="font-medium text-slate-900 underline underline-offset-4 decoration-slate-300 transition-colors hover:decoration-slate-900 dark:text-white dark:decoration-slate-600 dark:hover:decoration-white" to="/register">Create an account</Link></>}>
       <form onSubmit={submit} className="space-y-4" noValidate>
         <Input label="Email" type="email" autoComplete="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
         <Input label="Password" type="password" autoComplete="current-password" required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-        {error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">{error}</p>}
+        {error && <p role="alert" className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300">{error}</p>}
         <Button type="submit" loading={busy} className="w-full" disabled={!form.email || !form.password}>Sign in</Button>
       </form>
     </Shell>
@@ -75,7 +84,7 @@ export function RegisterPage() {
   };
 
   return (
-    <Shell title="Create your account" subtitle="Browse gowns, suits, costumes and traditional wear." footer={<>Already registered? <Link className="font-medium text-brand-600 hover:underline" to="/login">Sign in</Link></>}>
+    <Shell title="Create your account" subtitle="Browse gowns, suits, costumes and traditional wear." footer={<>Already registered? <Link className="font-medium text-slate-900 underline underline-offset-4 decoration-slate-300 transition-colors hover:decoration-slate-900 dark:text-white dark:decoration-slate-600 dark:hover:decoration-white" to="/login">Sign in</Link></>}>
       <form onSubmit={submit} className="space-y-4" noValidate>
         <Input label="Full name" autoComplete="name" value={form.name} onChange={set('name')} error={errors.name} />
         <Input label="Email" type="email" autoComplete="email" value={form.email} onChange={set('email')} error={errors.email} />
@@ -84,7 +93,7 @@ export function RegisterPage() {
           <Input label="Phone (optional)" autoComplete="tel" value={form.phone} onChange={set('phone')} />
           <Input label="Address (optional)" autoComplete="street-address" value={form.address} onChange={set('address')} />
         </div>
-        {error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">{error}</p>}
+        {error && <p role="alert" className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300">{error}</p>}
         <Button type="submit" loading={busy} className="w-full">Create account</Button>
       </form>
     </Shell>

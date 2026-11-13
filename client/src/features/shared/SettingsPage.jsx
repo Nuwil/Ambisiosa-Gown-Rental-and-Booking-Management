@@ -69,18 +69,18 @@ export function PasswordForm() {
 export function ThemeControl() {
   const { user, setTheme } = useAuth();
   return (
-    <div className="inline-flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800" role="radiogroup" aria-label="Theme">
+    <div className="inline-flex rounded-lg border border-slate-200 p-0.5 dark:border-slate-700" role="radiogroup" aria-label="Theme">
       {[['light', 'Light', 'sun'], ['dark', 'Dark', 'moon']].map(([v, l, icon]) => (
         <button key={v} role="radio" aria-checked={user.theme === v} onClick={() => setTheme(v)}
-          className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition ${user.theme === v ? 'bg-white shadow-sm dark:bg-slate-700' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}><Icon name={icon} className="h-4 w-4" />{l}</button>
+          className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition ${user.theme === v ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}><Icon name={icon} className="h-4 w-4" />{l}</button>
       ))}
     </div>
   );
 }
 
 const Card = ({ title, aside, children }) => (
-  <section className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-    <div className="mb-3 flex items-center justify-between gap-2"><h2 className="text-sm font-semibold">{title}</h2>{aside}</div>
+  <section className="card p-6">
+    <div className="mb-4 flex items-center justify-between gap-2"><h2 className="eyebrow">{title}</h2>{aside}</div>
     {children}
   </section>
 );
@@ -91,10 +91,10 @@ function SummaryCard({ onLogout }) {
   const initials = user.name.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   const shop = user.role === 'owner' || user.role === 'staff' ? user.shop_name : null;
   return (
-    <section className="flex flex-wrap items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand-600 text-lg font-semibold text-white" aria-hidden="true">{initials}</div>
+    <section className="card flex flex-wrap items-center gap-5 p-6">
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-slate-900 font-display text-xl text-white dark:bg-slate-100 dark:text-slate-900" aria-hidden="true">{initials}</div>
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2"><p className="truncate text-lg font-semibold">{user.name}</p><Badge tone="violet" className="capitalize">{user.role}</Badge></div>
+        <div className="flex flex-wrap items-center gap-2"><p className="truncate font-display text-3xl font-normal">{user.name}</p><Badge tone="violet" className="capitalize">{user.role}</Badge></div>
         <p className="truncate text-sm text-slate-500">{user.email}{shop ? ` · ${shop}` : ''} · Member since {fmtDate(user.created_at)}</p>
         {user.role === 'staff' && (
           <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-slate-500">Access: <strong className="text-slate-700 dark:text-slate-300">{presetFor(user.permissions)}</strong>
@@ -110,7 +110,7 @@ export function AccountSections({ onLogout }) {
   return (
     <div className="space-y-4">
       <SummaryCard onLogout={onLogout} />
-      <div className="grid items-start gap-4 lg:grid-cols-2">
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <Card title="Profile"><ProfileForm /></Card>
         <Card title="Change password"><PasswordForm /></Card>
       </div>

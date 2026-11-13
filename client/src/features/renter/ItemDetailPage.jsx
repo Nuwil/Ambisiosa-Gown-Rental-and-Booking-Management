@@ -3,15 +3,14 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api/client.js';
 import { useCart } from '../cart/CartContext.jsx';
 import { useAuth } from '../../auth/AuthContext.jsx';
-import { Button, Input, Textarea } from '../../components/ui/Controls.jsx';
+import { Button, Input, Stepper, Textarea } from '../../components/ui/Controls.jsx';
+import Icon from '../../components/ui/Icon.jsx';
 import { Badge, StatusBadge } from '../../components/ui/Display.jsx';
 import { Async } from '../../components/ui/Feedback.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
 import { cx, daysBetween, peso, todayISO } from '../../lib/format.js';
 import { fieldErrors } from '../../lib/forms.js';
 import { useFetch } from '../../lib/useFetch.js';
-
-const Arrow = ({ dir }) => <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={dir === 'left' ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'} /></svg>;
 
 function Lightbox({ images, index, onIndex, onClose, name }) {
   const go = useCallback((d) => onIndex((index + d + images.length) % images.length), [index, images.length, onIndex]);
@@ -23,10 +22,10 @@ function Lightbox({ images, index, onIndex, onClose, name }) {
   }, [go, onClose]);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" role="dialog" aria-modal="true" aria-label={`${name} photos`} onClick={onClose}>
-      <button className="absolute right-4 top-4 rounded-full bg-white/10 px-3 py-1.5 text-sm text-white hover:bg-white/20" onClick={onClose}>Close</button>
-      {images.length > 1 && <button aria-label="Previous photo" className="absolute left-3 rounded-full bg-white/10 p-3 text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); go(-1); }}><Arrow dir="left" /></button>}
+      <button aria-label="Close" className="absolute right-4 top-4 rounded-full bg-white/10 p-2.5 text-white transition-colors hover:bg-white/20" onClick={onClose}><Icon name="close" className="h-5 w-5" /></button>
+      {images.length > 1 && <button aria-label="Previous photo" className="absolute left-3 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20" onClick={(e) => { e.stopPropagation(); go(-1); }}><Icon name="chevron-left" /></button>}
       <img src={images[index].url} alt={`${name}, photo ${index + 1} of ${images.length}`} className="max-h-full max-w-full rounded-lg object-contain" onClick={(e) => e.stopPropagation()} />
-      {images.length > 1 && <button aria-label="Next photo" className="absolute right-3 rounded-full bg-white/10 p-3 text-white hover:bg-white/20" onClick={(e) => { e.stopPropagation(); go(1); }}><Arrow dir="right" /></button>}
+      {images.length > 1 && <button aria-label="Next photo" className="absolute right-3 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20" onClick={(e) => { e.stopPropagation(); go(1); }}><Icon name="chevron-right" /></button>}
       <p className="absolute bottom-4 text-sm text-white/70">{index + 1} / {images.length}</p>
     </div>
   );
@@ -43,17 +42,17 @@ function Gallery({ item }) {
         <div className="flex gap-2 overflow-x-auto sm:w-20 sm:shrink-0 sm:flex-col sm:overflow-visible">
           {images.map((im, i) => (
             <button key={im.id} onClick={() => setActive(i)} onMouseEnter={() => setActive(i)} aria-label={`Show photo ${i + 1}`} aria-current={i === active}
-              className={cx('aspect-[4/5] w-16 shrink-0 overflow-hidden rounded-lg border-2 transition sm:w-full', i === active ? 'border-slate-900 dark:border-white' : 'border-transparent opacity-70 hover:opacity-100')}>
+              className={cx('aspect-[4/5] w-16 shrink-0 overflow-hidden rounded-lg border transition duration-200 sm:w-full', i === active ? 'border-slate-900 dark:border-white' : 'border-transparent opacity-60 hover:opacity-100')}>
               <img src={im.url} alt="" className="h-full w-full object-cover" />
             </button>
           ))}
         </div>
       )}
-      <div className="relative min-w-0 flex-1 self-start overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
+      <div className="relative min-w-0 flex-1 self-start overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800">
         {current ? (
           <button className="block aspect-[4/5] w-full cursor-zoom-in" onClick={() => setOpen(true)} aria-label="Open photo full screen"><img src={current.url} alt={item.name} className="h-full w-full object-cover" /></button>
         ) : (
-          <div className="flex aspect-[4/5] items-center justify-center text-6xl font-semibold text-brand-300">{item.name.slice(0, 2).toUpperCase()}</div>
+          <div className="flex aspect-[4/5] items-center justify-center font-display text-7xl text-slate-400">{item.name.slice(0, 2).toUpperCase()}</div>
         )}
         {images.length > 1 && <span className="pointer-events-none absolute bottom-3 right-3 rounded-full bg-black/55 px-2.5 py-1 text-xs text-white">{active + 1} / {images.length}</span>}
       </div>
@@ -127,10 +126,10 @@ function PurchasePanel({ item, dates, setDates }) {
   return (
     <form onSubmit={submit} className="space-y-5" noValidate>
       {canBuy && (
-        <div className="grid grid-cols-2 rounded-lg bg-slate-100 p-1 dark:bg-slate-800" role="tablist">
+        <div className="grid grid-cols-2 rounded-lg border border-slate-200 p-0.5 dark:border-slate-700" role="tablist">
           {[['rental', 'Rent'], ['purchase', 'Buy']].map(([v, l]) => (
             <button key={v} role="tab" aria-selected={type === v} type="button" onClick={() => setType(v)}
-              className={cx('rounded-md py-2 text-sm font-semibold transition', type === v ? 'bg-white shadow-sm dark:bg-slate-700' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200')}>{l}</button>
+              className={cx('rounded-md py-2 text-sm font-medium transition-colors duration-200', type === v ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white')}>{l}</button>
           ))}
         </div>
       )}
@@ -152,17 +151,13 @@ function PurchasePanel({ item, dates, setDates }) {
                   : v.available < 1 ? 'cursor-not-allowed border-slate-200 text-slate-400 line-through dark:border-slate-800' : 'border-slate-300 hover:border-slate-900 dark:border-slate-700 dark:hover:border-white')}>{v.size}</button>
           ))}
         </div>
-        {errors.variant_id && <p className="mt-1.5 text-xs text-red-600" role="alert">{errors.variant_id}</p>}
+        {errors.variant_id && <p className="mt-1.5 text-xs text-red-700 dark:text-red-400" role="alert">{errors.variant_id}</p>}
       </div>
 
       <div>
         <p className="label">Quantity</p>
-        <div className="inline-flex items-center rounded-lg border border-slate-300 dark:border-slate-700">
-          <button type="button" aria-label="Decrease quantity" className="px-3 py-2 text-lg leading-none hover:bg-slate-100 disabled:opacity-40 dark:hover:bg-slate-800" disabled={quantity <= 1} onClick={() => setQuantity(quantity - 1)}>−</button>
-          <span className="w-10 text-center text-sm font-medium tabular-nums" aria-live="polite">{quantity}</span>
-          <button type="button" aria-label="Increase quantity" className="px-3 py-2 text-lg leading-none hover:bg-slate-100 disabled:opacity-40 dark:hover:bg-slate-800" disabled={!variant || quantity >= max} onClick={() => setQuantity(quantity + 1)}>+</button>
-        </div>
-        {errors.quantity && <p className="mt-1.5 text-xs text-red-600" role="alert">{errors.quantity}</p>}
+        <Stepper value={quantity} max={max || 1} disabled={!variant} onChange={setQuantity} />
+        {errors.quantity && <p className="mt-1.5 text-xs text-red-700 dark:text-red-400" role="alert">{errors.quantity}</p>}
       </div>
 
       {type === 'purchase' && (
@@ -173,10 +168,10 @@ function PurchasePanel({ item, dates, setDates }) {
       )}
       <Textarea label="Note to the shop (optional)" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
 
-      <div className="rounded-xl bg-slate-50 p-4 dark:bg-slate-800/50">
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950/40">
         <div className="flex items-baseline justify-between">
           <span className="text-sm text-slate-500">{type === 'rental' ? `Estimated total${days ? ` · ${days} day${days === 1 ? '' : 's'}` : ''}` : 'Total'}</span>
-          <strong className="text-2xl tabular-nums">{peso(total)}</strong>
+          <strong className="font-display text-4xl font-normal tabular-nums">{peso(total)}</strong>
         </div>
         {type === 'rental' && days > 0 && <p className="mt-1 text-xs text-slate-500">{peso(item.rental_price)} × {days} day{days === 1 ? '' : 's'}{quantity > 1 ? ` × ${quantity}` : ''}</p>}
       </div>
@@ -195,12 +190,12 @@ function Related({ item }) {
   if (!others.length) return null;
   return (
     <section className="mt-14" aria-label="More like this">
-      <h2 className="mb-4 text-lg font-semibold">More {item.category.toLowerCase()}</h2>
+      <h2 className="mb-5 font-display text-3xl font-normal">More {item.category.toLowerCase()}</h2>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {others.map((o) => (
           <Link key={o.id} to={`/renter/items/${o.id}`} className="group block">
-            <div className="aspect-[4/5] overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
-              {o.images[0] ? <img src={o.images[0].url} alt={o.name} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" /> : <div className="flex h-full items-center justify-center text-3xl font-semibold text-brand-300">{o.name.slice(0, 2).toUpperCase()}</div>}
+            <div className="aspect-[4/5] overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800">
+              {o.images[0] ? <img src={o.images[0].url} alt={o.name} loading="lazy" className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.04]" /> : <div className="flex h-full items-center justify-center font-display text-5xl text-slate-400">{o.name.slice(0, 2).toUpperCase()}</div>}
             </div>
             <p className="mt-2 truncate text-sm font-medium">{o.name}</p>
             <p className="text-sm"><strong className="tabular-nums">{peso(o.rental_price)}</strong><span className="text-xs text-slate-500"> / day</span></p>
@@ -222,28 +217,28 @@ export default function ItemDetailPage() {
       {(it) => (
         <>
           <nav className="mb-4 text-sm text-slate-500" aria-label="Breadcrumb">
-            <Link to="/renter/items" className="hover:underline">Rent items</Link><span className="mx-1.5">/</span>{it.category}<span className="mx-1.5">/</span><span className="text-slate-800 dark:text-slate-200">{it.name}</span>
+            <Link to="/renter/items" className="hover:underline">Rent items</Link><Icon name="chevron-right" className="mx-1 inline h-3.5 w-3.5 align-[-2px]" />{it.category}<Icon name="chevron-right" className="mx-1 inline h-3.5 w-3.5 align-[-2px]" /><span className="text-slate-800 dark:text-slate-200">{it.name}</span>
           </nav>
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-12">
             <div className="lg:self-start"><Gallery key={it.id} item={it} /></div>
 
             <div className="lg:sticky lg:top-20 lg:self-start">
               <div className="flex flex-wrap items-center gap-2"><Badge tone="violet">{it.category}</Badge><StatusBadge status={it.availability_status} />{it.condition_status !== 'good' && <Badge className="capitalize">{it.condition_status.replace('_', ' ')}</Badge>}</div>
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight">{it.name}</h1>
+              <h1 className="mt-3 font-display text-5xl font-normal leading-[1.05] tracking-tight">{it.name}</h1>
               <p className="mt-2 flex flex-wrap items-baseline gap-x-5 gap-y-1">
-                <span><strong className="text-3xl tabular-nums">{peso(it.rental_price)}</strong><span className="text-sm text-slate-500"> / day</span></span>
+                <span><strong className="font-display text-4xl font-normal tabular-nums">{peso(it.rental_price)}</strong><span className="text-sm text-slate-500"> / day</span></span>
                 {it.purchase_price != null && <span className="text-sm text-slate-500">or buy for <strong className="tabular-nums text-slate-800 dark:text-slate-200">{peso(it.purchase_price)}</strong></span>}
               </p>
               {it.color && <p className="mt-2 text-sm text-slate-500">Colour: <span className="font-medium text-slate-800 dark:text-slate-200">{it.color}</span></p>}
 
-              <div className="mt-6 rounded-2xl border border-slate-200 p-5 dark:border-slate-800"><PurchasePanel item={it} dates={dates} setDates={setDates} /></div>
+              <div className="card mt-6 p-6"><PurchasePanel item={it} dates={dates} setDates={setDates} /></div>
 
-              <div className="mt-5 divide-y divide-slate-200 rounded-2xl border border-slate-200 text-sm dark:divide-slate-800 dark:border-slate-800">
-                {it.description && <details open className="group p-4"><summary className="cursor-pointer list-none font-semibold">Description</summary><p className="mt-2 whitespace-pre-line text-slate-600 dark:text-slate-300">{it.description}</p></details>}
-                <details className="group p-4"><summary className="cursor-pointer list-none font-semibold">How renting works</summary>
+              <div className="card mt-4 divide-y divide-slate-200 text-sm dark:divide-slate-800">
+                {it.description && <details open className="group p-4"><summary className="eyebrow cursor-pointer list-none transition-colors hover:text-slate-900 dark:hover:text-white">Description</summary><p className="mt-2 whitespace-pre-line text-slate-600 dark:text-slate-300">{it.description}</p></details>}
+                <details className="group p-4"><summary className="eyebrow cursor-pointer list-none transition-colors hover:text-slate-900 dark:hover:text-white">How renting works</summary>
                   <ol className="mt-2 list-decimal space-y-1 pl-5 text-slate-600 dark:text-slate-300"><li>Send a request for your dates and size.</li><li>The shop approves it and reserves the item for you.</li><li>Pick it up, enjoy your event, and return it by your return date.</li></ol>
                 </details>
-                <details className="group p-4"><summary className="cursor-pointer list-none font-semibold">Shop</summary>
+                <details className="group p-4"><summary className="eyebrow cursor-pointer list-none transition-colors hover:text-slate-900 dark:hover:text-white">Shop</summary>
                   <p className="mt-2 font-medium">{it.shop_name || it.owner_name}</p><p className="text-slate-500">{[it.owner_phone, it.owner_address].filter(Boolean).join(' · ') || 'No contact details listed'}</p>
                 </details>
               </div>

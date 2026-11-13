@@ -12,6 +12,7 @@ export const env = {
   port: Number(process.env.PORT || 4000),
   isProd: process.env.NODE_ENV === 'production',
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+  inquiryWebhookUrl: process.env.INQUIRY_WEBHOOK_URL || '',
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '8h',
   db: {
