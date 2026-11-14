@@ -18,6 +18,7 @@ import CartPage from './features/cart/CartPage.jsx';
 import ItemDetailPage from './features/renter/ItemDetailPage.jsx';
 import OversightPage from './features/admin/OversightPage.jsx';
 import AdminSettingsPage from './features/admin/AdminSettingsPage.jsx';
+import { DEMO_MODE } from './demo/session.js';
 
 // Charts (recharts) are the heaviest dependency, so the analytics page is split into its own chunk.
 const AnalyticsPage = lazy(() => import('./features/shared/AnalyticsPage.jsx'));
@@ -28,7 +29,35 @@ function RootRedirect() {
   return <Navigate to={user ? HOME[user.role] : '/login'} replace />;
 }
 
+function DemoRoutes() {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route element={<ProtectedRoute roles={['admin']} />}>
+        <Route path="/admin" element={<AppLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+        </Route>
+      </Route>
+      <Route element={<ProtectedRoute roles={['owner', 'staff']} />}>
+        <Route path="/owner" element={<AppLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<OwnerDashboard />} />
+        </Route>
+      </Route>
+      <Route element={<ProtectedRoute roles={['renter']} />}>
+        <Route path="/renter" element={<AppLayout />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<RenterDashboard />} />
+        </Route>
+      </Route>
+      <Route path="*" element={<RootRedirect />} />
+    </Routes>
+  );
+}
+
 export default function App() {
+  if (DEMO_MODE) return <Suspense fallback={<PageSpinner />}><DemoRoutes /></Suspense>;
   return (
     <Suspense fallback={<PageSpinner />}>
       <Routes>

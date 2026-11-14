@@ -32,7 +32,11 @@ npm run dev                           # API on :4000
 cd ../client && npm install && npm run dev   # http://localhost:5173 (proxies /api and /uploads)
 ```
 
-Demo accounts (password `Demo12345`): if the database has no owner, the seed creates `owner@demo.test`; otherwise it adds sample records to the existing owner account. Staff `staff1..3@demo.test` (Full access / Front desk / Inventory clerk) and renters `renter1..9@demo.test` are created (renter8 suspended, renter9 inactive; renter1 and renter2 have items waiting in their carts).
+## Vercel showcase mode
+
+The Vercel client build uses the `demo` Vite mode. It offers Admin, Owner, Staff, and Renter dashboard previews with sample data, without calling the API or requiring a database. This is a read-only showcase, not real authentication; changes and accounts are not stored. The server service is not publicly routed in this mode. For the full application, configure MySQL and deploy the normal client/server setup.
+
+Optional database-backed development sample data (`npm run seed:demo`, password `Demo12345`): if the database has no owner, the seed creates `owner@demo.test`; otherwise it adds sample records to the existing owner account. Staff `staff1..3@demo.test` (Full access / Front desk / Inventory clerk) and renters `renter1..9@demo.test` are created (renter8 suspended, renter9 inactive; renter1 and renter2 have items waiting in their carts).
 The demo items come with generated "Sample photo" images (`server/seed-assets`). Owners and staff replace them by uploading real photos in Inventory (up to 5 per item; the first is the main photo, the second shows on hover).
 Remove and reload sample data with `npm run seed:reset`. If demo items are already used by a non-demo cart or transaction, the reset stops rather than removing those records.
 

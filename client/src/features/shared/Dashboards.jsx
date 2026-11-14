@@ -7,6 +7,7 @@ import Icon from '../../components/ui/Icon.jsx';
 import { Donut, SimpleBar, TrendChart } from '../../components/charts/Charts.jsx';
 import { fmtDate, fmtDateTime, monthLabel, num, peso } from '../../lib/format.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
+import { DEMO_MODE } from '../../demo/session.js';
 
 const statusDonut = (rows) => {
   const m = {};
@@ -82,7 +83,7 @@ export function AdminDashboard() {
           <Section title="Recently registered users" className="col-span-2 md:col-span-6 lg:col-span-5" flush>
             <MiniTable empty="No users" rows={recentUsers} cols={[{ h: 'Name', c: (u) => u.name }, { h: 'Role', c: (u) => <Badge tone="violet">{u.role}</Badge> }, { h: 'Status', c: (u) => <StatusBadge status={u.status} /> }, { h: 'Joined', c: (u) => fmtDate(u.created_at) }]} />
           </Section>
-          <Section title="Recent system activity" className="col-span-2 md:col-span-6 lg:col-span-7" actions={<ActionLink to="/admin/settings?tab=logs">View all</ActionLink>} flush>
+          <Section title="Recent system activity" className="col-span-2 md:col-span-6 lg:col-span-7" actions={DEMO_MODE ? null : <ActionLink to="/admin/settings?tab=logs">View all</ActionLink>} flush>
             <MiniTable empty="No activity yet" rows={activity} cols={[{ h: 'Activity', c: (l) => l.description }, { h: 'Affected', c: (l) => l.target_name || '—' }, { h: 'When', c: (l) => <span className="whitespace-nowrap">{fmtDateTime(l.created_at)}</span> }]} />
           </Section>
         </Bento>
@@ -132,10 +133,10 @@ export function OwnerDashboard() {
             </Section>
             <Section title="Transactions by status" className="col-span-2 md:col-span-3 lg:col-span-4"><Donut data={statusDonut(statusBreakdown)} height={220} /></Section>
             <Section title="Low stock and unavailable" className="col-span-2 md:col-span-6 lg:col-span-4" flush>
-              <MiniTable empty="All items are well stocked" rows={lowStock} cols={[{ h: 'Item', c: (r) => <Link className="font-medium hover:underline" to="/owner/inventory">{r.name}</Link> }, { h: 'Size', c: (r) => r.size }, { h: 'Available', c: (r) => (r.available === 0 ? <Badge tone="red">Unavailable</Badge> : <Badge tone="amber">{r.available} of {r.total}</Badge>) }]} />
+              <MiniTable empty="All items are well stocked" rows={lowStock} cols={[{ h: 'Item', c: (r) => DEMO_MODE ? r.name : <Link className="font-medium hover:underline" to="/owner/inventory">{r.name}</Link> }, { h: 'Size', c: (r) => r.size }, { h: 'Available', c: (r) => (r.available === 0 ? <Badge tone="red">Unavailable</Badge> : <Badge tone="amber">{r.available} of {r.total}</Badge>) }]} />
             </Section>
 
-            <Section title="Purchase and rental history" className="col-span-2 md:col-span-6 lg:col-span-8" actions={<ActionLink to="/owner/transactions">Manage transactions</ActionLink>} flush>
+            <Section title="Purchase and rental history" className="col-span-2 md:col-span-6 lg:col-span-8" actions={DEMO_MODE ? null : <ActionLink to="/owner/transactions">Manage transactions</ActionLink>} flush>
               <MiniTable rows={recentTransactions} cols={txCols} empty="No transactions yet" />
             </Section>
             <Section title="Upcoming returns, 7 days" className="col-span-2 md:col-span-6 lg:col-span-4" flush>
@@ -153,7 +154,7 @@ export function RenterDashboard() {
   const state = useFetch('/stats/dashboard');
   return (
     <>
-      <PageHeader title={`Hello, ${user.name.split(' ')[0]}`} subtitle="Your rentals, purchases and reminders." actions={<Link to="/renter/items" className={buttonClass('primary', 'md')}>Browse items<Icon name="arrow-up-right" className="h-4 w-4" /></Link>} />
+      <PageHeader title={`Hello, ${user.name.split(' ')[0]}`} subtitle="Your rentals, purchases and reminders." actions={DEMO_MODE ? null : <Link to="/renter/items" className={buttonClass('primary', 'md')}>Browse items<Icon name="arrow-up-right" className="h-4 w-4" /></Link>} />
       <Async state={state}>{({ stats: s, recentTransactions, upcomingReturns, spendByMonth }) => (
         <div className="space-y-4">
           {upcomingReturns.some((u) => u.level !== 'upcoming') && (
@@ -183,7 +184,7 @@ export function RenterDashboard() {
             <Section title="Upcoming returns" className="col-span-2 md:col-span-6 lg:col-span-4" flush>
               <MiniTable empty="No active rentals" rows={upcomingReturns} cols={[{ h: 'Item', c: (u) => `${u.item_name} (${u.size})` }, { h: 'Return by', c: (u) => <span className="whitespace-nowrap">{fmtDate(u.expected_return)}</span> }]} />
             </Section>
-            <Section title="Recent transactions" className="col-span-2 md:col-span-6 lg:col-span-8" actions={<ActionLink to="/renter/history">Full history</ActionLink>} flush>
+            <Section title="Recent transactions" className="col-span-2 md:col-span-6 lg:col-span-8" actions={DEMO_MODE ? null : <ActionLink to="/renter/history">Full history</ActionLink>} flush>
               <MiniTable rows={recentTransactions} cols={txCols.filter((c) => c.h !== 'Customer')} empty="You have no transactions yet." />
             </Section>
           </Bento>

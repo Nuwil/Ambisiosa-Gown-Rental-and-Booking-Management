@@ -4,7 +4,7 @@
         "client": {
             "root": "client",
             "framework": "vite",
-            "buildCommand": "node ./node_modules/vite/bin/vite.js build"
+            "buildCommand": "node ./node_modules/vite/bin/vite.js build --mode demo"
         },
         "server": {
             "root": "server",
@@ -12,18 +12,6 @@
         }
     },
     "rewrites": [
-        {
-            "source": "/api/(.*)",
-            "destination": {
-                "service": "server"
-            }
-        },
-        {
-            "source": "/uploads/(.*)",
-            "destination": {
-                "service": "server"
-            }
-        },
         {
             "source": "/(.*)",
             "destination": {

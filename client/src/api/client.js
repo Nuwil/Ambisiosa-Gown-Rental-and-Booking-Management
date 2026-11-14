@@ -1,3 +1,6 @@
+import { DEMO_MODE } from '../demo/session.js';
+import { demoRequest } from '../demo/api.js';
+
 export class ApiError extends Error {
   constructor(status, message, details) {
     super(message);
@@ -17,6 +20,7 @@ const toQuery = (params = {}) => {
 };
 
 async function request(method, path, { body, params, form } = {}) {
+  if (DEMO_MODE) return demoRequest(method, path, { body, params, form });
   let res;
   try {
     res = await fetch(`/api${path}${toQuery(params)}`, {
@@ -49,6 +53,7 @@ export const api = {
 
 /** Download a binary endpoint (reports, backups) via the authenticated session. */
 export async function download(path, params, fallbackName = 'download') {
+  if (DEMO_MODE) throw new ApiError(403, 'Downloads are unavailable in the read-only showcase.');
   const res = await fetch(`/api${path}${toQuery(params)}`, { credentials: 'include' });
   if (!res.ok) {
     const data = await res.json().catch(() => null);

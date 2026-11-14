@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth, HOME } from '../../auth/AuthContext.jsx';
 import { Button, Input } from '../../components/ui/Controls.jsx';
+import { DEMO_MODE, DEMO_ROLES } from '../../demo/session.js';
 
 function Shell({ title, subtitle, children, footer }) {
   return (
@@ -29,13 +30,31 @@ function Shell({ title, subtitle, children, footer }) {
 }
 
 export function LoginPage() {
-  const { user, login } = useAuth();
+  const { user, login, demoLogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   if (user) return <Navigate to={HOME[user.role]} replace />;
+
+  if (DEMO_MODE) {
+    return (
+      <Shell title="Explore the showcase" subtitle="Choose a role to preview its dashboard. No password or database is used." footer="This is a read-only demo with sample data. Changes are not saved.">
+        <div className="space-y-3">
+          {DEMO_ROLES.map(({ role, label, description }) => (
+            <Button key={role} variant="secondary" className="w-full justify-between px-4 py-3 text-left" onClick={() => {
+              const u = demoLogin(role);
+              navigate(HOME[u.role], { replace: true });
+            }}>
+              <span><span className="block capitalize">{label}</span><span className="mt-0.5 block text-xs font-normal opacity-70">{description}</span></span>
+              <span aria-hidden="true">→</span>
+            </Button>
+          ))}
+        </div>
+      </Shell>
+    );
+  }
 
   const submit = async (e) => {
     e.preventDefault(); setError(''); setBusy(true);

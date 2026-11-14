@@ -5,6 +5,7 @@ import Icon from '../components/ui/Icon.jsx';
 import NotificationBell from './NotificationBell.jsx';
 import { cx } from '../lib/format.js';
 import { CartProvider, useCart } from '../features/cart/CartContext.jsx';
+import { DEMO_MODE } from '../demo/session.js';
 
 const NAV = {
   admin: [
@@ -64,7 +65,7 @@ function Layout() {
         <p className="eyebrow mt-2">{user.role} workspace</p>
       </div>
       <ul className="flex-1 space-y-0.5 px-3">
-        {NAV[user.role].filter((n) => !n.perm || user.permissions?.includes(n.perm)).map((n) => (
+        {NAV[user.role].filter((n) => !n.perm || user.permissions?.includes(n.perm)).filter((n) => !DEMO_MODE || n.label === 'Dashboard').map((n) => (
           <li key={n.to}>
             <NavLink to={n.to} onClick={() => setOpen(false)}
               className={({ isActive }) => cx('group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-200',
@@ -98,7 +99,7 @@ function Layout() {
         <header className="sticky top-0 z-30 flex items-center gap-1 border-b border-slate-200 bg-slate-50/80 px-4 py-2.5 backdrop-blur dark:border-slate-800 dark:bg-slate-950/80">
           <button className={cx(iconBtn, 'lg:hidden')} onClick={() => setOpen(true)} aria-label="Open menu"><Icon name="menu" /></button>
           <div className="flex-1" />
-          {user.role === 'renter' && (
+          {user.role === 'renter' && !DEMO_MODE && (
             <NavLink to="/renter/cart" aria-label="Open cart" className={cx(iconBtn, 'relative')}>
               <Icon name="cart" /><CartBadge className="!absolute -right-0.5 -top-0.5 !ml-0 !min-w-[1.1rem] !text-[10px] !leading-[1.1rem]" />
             </NavLink>
@@ -113,6 +114,7 @@ function Layout() {
             <div className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 text-[11px] font-medium text-slate-700 dark:border-slate-700 dark:text-slate-300" aria-hidden="true">{initials}</div>
           </div>
         </header>
+        {DEMO_MODE && <div className="border-b border-amber-300 bg-amber-50 px-4 py-2 text-center text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-200">Showcase mode · Sample data only · Read-only</div>}
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-8"><div key={location.pathname} className="page-enter"><Outlet /></div></main>
       </div>
     </div>
