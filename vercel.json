@@ -3,7 +3,8 @@
     "services": {
         "client": {
             "root": "client",
-            "framework": "vite"
+            "framework": "vite",
+            "buildCommand": "node ./node_modules/vite/bin/vite.js build"
         },
         "server": {
             "root": "server",
