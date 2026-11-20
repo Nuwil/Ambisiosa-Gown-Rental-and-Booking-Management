@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth, HOME } from '../../auth/AuthContext.jsx';
 import { Button, Input } from '../../components/ui/Controls.jsx';
-import { DEMO_MODE, DEMO_ROLES } from '../../demo/session.js';
+import Icon from '../../components/ui/Icon.jsx';
+import { useToast } from '../../components/ui/Toast.jsx';
+import { DEMO_ACCOUNTS, DEMO_ENABLED, DEMO_MODE, resetDemoData } from './demoAccounts.js';
 
-function Shell({ title, subtitle, children, footer }) {
+function Shell({ title, subtitle, children, footer, after }) {
   return (
     <div className="grid min-h-screen lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)]">
       <aside className="hidden flex-col justify-between bg-slate-900 p-14 text-slate-100 lg:flex dark:border-r dark:border-slate-800 dark:bg-slate-900">
-        <p className="font-display text-3xl font-normal">Ambisiosa</p>
+        <p className="font-display text-3xl font-normal">Atelier Rentals</p>
         <div>
           <span className="mb-6 block h-px w-12 bg-brand-300" aria-hidden="true" />
           <p className="max-w-md font-display text-5xl font-normal leading-[1.08]">Gowns, suits, costumes and traditional wear.</p>
@@ -18,11 +20,12 @@ function Shell({ title, subtitle, children, footer }) {
       </aside>
       <main className="flex items-center justify-center px-6 py-12">
         <div className="page-enter w-full max-w-sm">
-          <p className="mb-10 font-display text-2xl font-normal lg:hidden">Ambisiosa</p>
+          <p className="mb-10 font-display text-2xl font-normal lg:hidden">Atelier Rentals</p>
           <h1 className="font-display text-4xl font-normal tracking-tight">{title}</h1>
           <p className="mb-8 mt-2 text-sm text-slate-500">{subtitle}</p>
           {children}
           <p className="mt-8 text-sm text-slate-500">{footer}</p>
+          {after}
         </div>
       </main>
     </div>
@@ -30,43 +33,57 @@ function Shell({ title, subtitle, children, footer }) {
 }
 
 export function LoginPage() {
-  const { user, login, demoLogin } = useAuth();
+  const { user, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [demoOpen, setDemoOpen] = useState(true);
+  const [demoBusy, setDemoBusy] = useState('');
+  const toast = useToast();
   if (user) return <Navigate to={HOME[user.role]} replace />;
 
-  if (DEMO_MODE) {
-    return (
-      <Shell title="Explore the showcase" subtitle="Choose a role to preview its dashboard. No password or database is used." footer="This is a read-only demo with sample data. Changes are not saved.">
-        <div className="space-y-3">
-          {DEMO_ROLES.map(({ role, label, description }) => (
-            <Button key={role} variant="secondary" className="w-full justify-between px-4 py-3 text-left" onClick={() => {
-              const u = demoLogin(role);
-              navigate(HOME[u.role], { replace: true });
-            }}>
-              <span><span className="block capitalize">{label}</span><span className="mt-0.5 block text-xs font-normal opacity-70">{description}</span></span>
-              <span aria-hidden="true">→</span>
-            </Button>
-          ))}
-        </div>
-      </Shell>
-    );
-  }
-
-  const submit = async (e) => {
-    e.preventDefault(); setError(''); setBusy(true);
+  const signIn = async (email, password) => {
+    setError(''); setBusy(true);
     try {
-      const u = await login(form.email.trim(), form.password);
+      const u = await login(email.trim(), password);
       const from = location.state?.from;
       navigate(from && from.startsWith(HOME[u.role].split('/').slice(0, 2).join('/')) ? from : HOME[u.role], { replace: true });
-    } catch (err) { setError(err.message); } finally { setBusy(false); }
+    } catch (err) { setError(err.message); } finally { setBusy(false); setDemoBusy(''); }
   };
+  const submit = (e) => { e.preventDefault(); signIn(form.email, form.password); };
+  const useDemo = (a) => { setDemoBusy(a.role); setForm({ email: a.email, password: a.password }); signIn(a.email, a.password); };
 
   return (
-    <Shell title="Welcome back" subtitle="Sign in to manage or book rentals." footer={<>New renter? <Link className="font-medium text-slate-900 underline underline-offset-4 decoration-slate-300 transition-colors hover:decoration-slate-900 dark:text-white dark:decoration-slate-600 dark:hover:decoration-white" to="/register">Create an account</Link></>}>
+    <Shell title="Welcome back" subtitle="Sign in to manage or book rentals." footer={<>New renter? <Link className="font-medium text-slate-900 underline underline-offset-4 decoration-slate-300 transition-colors hover:decoration-slate-900 dark:text-white dark:decoration-slate-600 dark:hover:decoration-white" to="/register">Create an account</Link></>}
+      after={DEMO_ENABLED && (
+        <div className="mt-6 border-t border-slate-200 pt-6 dark:border-slate-800">
+          <Button type="button" variant="secondary" className="w-full" aria-expanded={demoOpen} aria-controls="demo-accounts" onClick={() => setDemoOpen((o) => !o)}>
+            Demo accounts <Icon name="chevron-down" className={`h-4 w-4 transition-transform ${demoOpen ? 'rotate-180' : ''}`} />
+          </Button>
+          <ul id="demo-accounts" inert={!demoOpen} className={`grid gap-2 overflow-hidden transition-all duration-300 ${demoOpen ? 'mt-3 max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+            {DEMO_ACCOUNTS.map((a) => (
+              <li key={a.role}>
+                <button type="button" disabled={busy} onClick={() => useDemo(a)} className="card flex w-full items-center gap-3 p-3 text-left transition-colors hover:border-slate-900 disabled:opacity-60 dark:hover:border-white">
+                  <Icon name={a.icon} className="h-5 w-5 shrink-0 text-slate-500" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium">{a.label}{demoBusy === a.role && ' …'}</span>
+                    <span className="block truncate text-xs text-slate-500">{a.blurb}</span>
+                  </span>
+                  <Icon name="arrow-up-right" className="h-4 w-4 shrink-0 text-slate-400" />
+                </button>
+              </li>
+            ))}
+          </ul>
+          {DEMO_MODE && (
+            <p className="mt-3 text-xs text-slate-500">
+              Demo mode — data resets when you close the tab.{' '}
+              <button type="button" className="font-medium underline underline-offset-4 decoration-slate-300 transition-colors hover:decoration-slate-900 dark:decoration-slate-600 dark:hover:decoration-white" onClick={() => resetDemoData().then(() => toast.success('Demo data reset'))}>Reset demo data</button>
+            </p>
+          )}
+        </div>
+      )}>
       <form onSubmit={submit} className="space-y-4" noValidate>
         <Input label="Email" type="email" autoComplete="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
         <Input label="Password" type="password" autoComplete="current-password" required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />

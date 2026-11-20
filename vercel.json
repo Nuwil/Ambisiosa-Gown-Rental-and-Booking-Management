@@ -1,22 +1,13 @@
 {
-    "$schema": "https://openapi.vercel.sh/vercel.json",
-    "services": {
-        "client": {
-            "root": "client",
-            "framework": "vite",
-            "buildCommand": "node ./node_modules/vite/bin/vite.js build --mode demo"
-        },
-        "server": {
-            "root": "server",
-            "framework": "express"
-        }
-    },
-    "rewrites": [
-        {
-            "source": "/(.*)",
-            "destination": {
-                "service": "client"
-            }
-        }
-    ]
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "client": {
+      "root": "client",
+      "framework": "vite",
+      "buildCommand": "VITE_DEMO_MODE=true npm run build"
+    }
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": { "service": "client" } }
+  ]
 }

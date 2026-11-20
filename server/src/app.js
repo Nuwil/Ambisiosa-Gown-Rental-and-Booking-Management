@@ -18,7 +18,6 @@ import reportRoutes from './modules/reports/routes.js';
 import adminUsers from './modules/admin/users.js';
 import staffRoutes from './modules/staff/routes.js';
 import adminBackups from './modules/admin/backups.js';
-import inquiryRoutes from './modules/inquiries/routes.js';
 
 export function createApp() {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -44,7 +43,6 @@ export function createApp() {
   app.use('/api/staff', staffRoutes);
   app.use('/api/admin', adminUsers);
   app.use('/api/admin/backups', adminBackups);
-  app.use('/api/inquiry', inquiryRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

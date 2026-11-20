@@ -1,0 +1,7 @@
+{
+  "name": "ambisiosa-gown-rental-and-booking-management",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix server run dev"
+  }
+}
