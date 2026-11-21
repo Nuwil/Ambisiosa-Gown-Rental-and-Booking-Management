@@ -2,6 +2,7 @@
   "name": "ambisiosa-gown-rental-and-booking-management",
   "private": true,
   "scripts": {
+    "build": "npm --prefix client run build",
     "dev": "npm --prefix server run dev"
   }
 }
