@@ -1,5 +1,7 @@
-import { forwardRef, useEffect, useId } from 'react';
+import { forwardRef, useEffect, useId, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { cx } from '../../lib/format.js';
+import { lockScroll } from '../../lib/scrollLock.js';
 import { Spinner } from './Feedback.jsx';
 import Icon from './Icon.jsx';
 
@@ -60,18 +62,23 @@ export function Textarea({ label, error, hint, className, ...props }) {
   return <Field label={label} error={error} hint={hint} className={className}>{(a) => <textarea rows={3} className="input" {...a} {...props} />}</Field>;
 }
 
+/** Renders overlays on <body> so no ancestor (sidebar, sticky header, animated page wrapper) can clip or stack above them. */
+export const Portal = ({ children }) => createPortal(children, document.body);
+
 export function Modal({ open, onClose, title, children, footer, size = 'md' }) {
+  const closeRef = useRef(onClose); closeRef.current = onClose; // inline onClose handlers must not re-run the lock effect
   useEffect(() => {
     if (!open) return;
-    const onKey = (e) => e.key === 'Escape' && onClose();
+    const onKey = (e) => e.key === 'Escape' && closeRef.current();
     document.addEventListener('keydown', onKey);
-    const prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
-  }, [open, onClose]);
+    const unlock = lockScroll();
+    return () => { document.removeEventListener('keydown', onKey); unlock(); };
+  }, [open]);
   if (!open) return null;
   const width = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-3xl' }[size];
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/50 p-0 backdrop-blur-[2px] sm:items-center sm:p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
+    <Portal>
+    <div className="fixed inset-0 z-50 flex items-end justify-center overflow-y-auto bg-slate-950/50 p-0 backdrop-blur-[2px] sm:items-center sm:p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div role="dialog" aria-modal="true" aria-label={title} className={cx('page-enter card flex max-h-[92vh] w-full flex-col rounded-b-none sm:rounded-b-2xl', width)}>
         <div className="flex items-center justify-between px-6 pb-3 pt-5">
           <h2 className="font-display text-2xl font-normal">{title}</h2>
@@ -81,6 +88,7 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }) {
         {footer && <div className="flex justify-end gap-2 border-t border-slate-200 px-6 py-3.5 dark:border-slate-800">{footer}</div>}
       </div>
     </div>
+    </Portal>
   );
 }
 

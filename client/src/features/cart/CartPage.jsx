@@ -7,7 +7,7 @@ import Icon from '../../components/ui/Icon.jsx';
 import { Badge, PageHeader, TypeBadge } from '../../components/ui/Display.jsx';
 import { Async, EmptyState } from '../../components/ui/Feedback.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
-import { cx, peso, todayISO } from '../../lib/format.js';
+import { cx, isPastDate, peso, todayISO } from '../../lib/format.js';
 import { useFetch } from '../../lib/useFetch.js';
 import { useCart } from './CartContext.jsx';
 
@@ -31,9 +31,9 @@ function Line({ l, selected, onSelect, onPatch, onRemove, busy }) {
         <div className="mt-2 flex flex-wrap items-end gap-x-3 gap-y-2">
           {l.type === 'rental' && (<>
             <label className="text-xs text-slate-500">From<input type="date" min={todayISO()} value={l.start_date} disabled={busy} aria-label="Rental date"
-              onChange={(e) => e.target.value && onPatch({ start_date: e.target.value, ...(l.expected_return < e.target.value ? { expected_return: e.target.value } : {}) })} className="input !w-auto !py-1 text-sm" /></label>
-            <label className="text-xs text-slate-500">To<input type="date" min={l.start_date} value={l.expected_return} disabled={busy} aria-label="Return date"
-              onChange={(e) => e.target.value && onPatch({ expected_return: e.target.value })} className="input !w-auto !py-1 text-sm" /></label>
+              onChange={(e) => e.target.value && !isPastDate(e.target.value) && onPatch({ start_date: e.target.value, ...(l.expected_return < e.target.value ? { expected_return: e.target.value } : {}) })} className="input !w-auto !py-1 text-sm" /></label>
+            <label className="text-xs text-slate-500">To<input type="date" min={l.start_date > todayISO() ? l.start_date : todayISO()} value={l.expected_return} disabled={busy} aria-label="Return date"
+              onChange={(e) => e.target.value && !isPastDate(e.target.value) && onPatch({ expected_return: e.target.value })} className="input !w-auto !py-1 text-sm" /></label>
           </>)}
           <Stepper size="sm" value={l.quantity} max={max} disabled={busy} onChange={(quantity) => onPatch({ quantity })} />
           <span className="text-xs text-slate-500">

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api/client.js';
 import { TransactionDetail, TransactionFilters, TransactionsTable } from '../../components/TransactionViews.jsx';
@@ -29,6 +29,7 @@ function ManualTransaction({ onClose, onCreated, customerId = '' }) {
     e.preventDefault(); setErrors({});
     if (!form.customer_id) return setErrors({ customer_id: 'Choose a customer' });
     if (!form.variant_id) return setErrors({ variant_id: 'Choose an item and size' });
+    if (form.type === 'rental' && form.start_date < todayISO()) return setErrors({ start_date: 'Rental date cannot be in the past' });
     if (form.type === 'rental' && form.expected_return < form.start_date) return setErrors({ expected_return: 'Return date must be on or after the rental date' });
     setBusy(true);
     try {
@@ -57,7 +58,7 @@ function ManualTransaction({ onClose, onCreated, customerId = '' }) {
         <div className="hidden sm:block" />
         {form.type === 'rental' && (
           <>
-            <Input label="Rental date" type="date" value={form.start_date} onChange={set('start_date')} error={errors.start_date} />
+            <Input label="Rental date" type="date" min={todayISO()} value={form.start_date} onChange={set('start_date')} error={errors.start_date} />
             <Input label="Expected return" type="date" min={form.start_date} value={form.expected_return} onChange={set('expected_return')} error={errors.expected_return} />
           </>
         )}
@@ -73,8 +74,10 @@ export default function OwnerTransactionsPage() {
   const q = useDebounced(filters.q);
   const list = useFetch('/transactions', { ...filters, q });
   const categories = useFetch('/inventory/manage/categories');
-  const [openTx, setOpenTx] = useState(null);
   const [params, setParams] = useSearchParams();
+  const [openTx, setOpenTx] = useState(Number(params.get('tx')) || null); // arrives from a notification
+  useEffect(() => { const t = Number(params.get('tx')); if (t) setOpenTx(t); }, [params]); // notification clicked while already on this page
+  const closeTx = () => { setOpenTx(null); if (params.has('tx')) setParams((p) => { p.delete('tx'); return p; }, { replace: true }); };
   const presetCustomer = params.get('customer') || '';
   const [creating, setCreating] = useState(params.get('new') === '1'); // arrives from "Register & start transaction"
   const closeCreate = () => { setCreating(false); if (params.has('new')) setParams({}, { replace: true }); };
@@ -88,7 +91,7 @@ export default function OwnerTransactionsPage() {
           <TransactionsTable result={list.data} loading={list.loading} mode="owner" onPage={(page) => setFilters({ ...filters, page })} onRowClick={(t) => setOpenTx(t.id)} />
         )}
       </Section>
-      <TransactionDetail id={openTx} role="owner" onClose={() => setOpenTx(null)} onChanged={list.reload} />
+      <TransactionDetail id={openTx} role="owner" onClose={closeTx} onChanged={list.reload} />
       {creating && <ManualTransaction customerId={presetCustomer} onClose={closeCreate} onCreated={() => { closeCreate(); list.reload(); }} />}
     </>
   );

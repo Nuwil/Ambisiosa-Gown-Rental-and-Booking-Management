@@ -32,3 +32,8 @@ export const profileSchema = z.object({
 });
 
 export const themeSchema = z.object({ theme: z.enum(['light', 'dark']) });
+
+const code = z.string().trim().regex(/^\d{6}$/, 'Enter the 6-digit code');
+export const verifyEmailSchema = z.object({ email, code });
+export const resendCodeSchema = z.object({ email });
+export const googleSchema = z.object({ credential: z.string().min(20).max(4096) });

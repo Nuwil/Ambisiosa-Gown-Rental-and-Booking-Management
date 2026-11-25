@@ -2,19 +2,23 @@ import { useEffect, useState } from 'react';
 import { cx } from '../../lib/format.js';
 import { Badge } from './Display.jsx';
 import Icon from './Icon.jsx';
+import { lockScroll } from '../../lib/scrollLock.js';
+import { Portal } from './Controls.jsx';
 
 function Preview({ url, title, onClose }) {
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose();
     document.addEventListener('keydown', onKey);
-    const prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
+    const unlock = lockScroll();
+    return () => { document.removeEventListener('keydown', onKey); unlock(); };
   }, [onClose]);
   return (
+    <Portal>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" role="dialog" aria-modal="true" aria-label={title} onClick={onClose}>
       <button aria-label="Close" className="absolute right-4 top-4 bg-white/10 p-2.5 text-white transition-colors hover:bg-white/20" onClick={onClose}><Icon name="close" className="h-5 w-5" /></button>
       <img src={url} alt={title} className="max-h-full max-w-full object-contain" onClick={(e) => e.stopPropagation()} />
     </div>
+    </Portal>
   );
 }
 

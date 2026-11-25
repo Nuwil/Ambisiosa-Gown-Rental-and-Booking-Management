@@ -7,6 +7,7 @@ import { Async, EmptyState } from '../../components/ui/Feedback.jsx';
 import { Badge, EstimateTag, PageHeader, Section, StatCard, StatGrid } from '../../components/ui/Display.jsx';
 import { Button, Input, Select } from '../../components/ui/Controls.jsx';
 import { Donut, ForecastChart, SimpleBar, TrendChart } from '../../components/charts/Charts.jsx';
+import GrowthReport from './GrowthReport.jsx';
 import { bucketLabel, fmtDate, monthLabel, num, pct, peso } from '../../lib/format.js';
 
 const RANGES = [['daily', 'Daily (30 days)'], ['weekly', 'Weekly (12 weeks)'], ['monthly', 'Monthly (12 months)'], ['yearly', 'Yearly (5 years)'], ['custom', 'Custom range']];
@@ -76,6 +77,7 @@ export default function AnalyticsPage() {
   const [tab, setTab] = useState('overview');
   const [exporting, setExporting] = useState('');
   const [report, setReport] = useState({ kind: 'rentals', format: 'xlsx' });
+  const [showGrowth, setShowGrowth] = useState(false);
   const customReady = range !== 'custom' || (custom.from && custom.to && custom.from <= custom.to);
   const state = useFetch('/stats/analytics', { range, ...(range === 'custom' ? custom : {}) }, { enabled: !!customReady });
   const isAdmin = user.role === 'admin';
@@ -93,6 +95,7 @@ export default function AnalyticsPage() {
       <div className="card mb-5 flex flex-wrap items-end gap-3 p-4">
         <Select label="Period" value={range} onChange={(e) => setRange(e.target.value)} className="w-52">{RANGES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Select>
         {range === 'custom' && <><Input label="From" type="date" value={custom.from} onChange={(e) => setCustom({ ...custom, from: e.target.value })} /><Input label="To" type="date" value={custom.to} onChange={(e) => setCustom({ ...custom, to: e.target.value })} error={custom.from && custom.to && custom.from > custom.to ? 'Must be after From' : ''} /></>}
+        <Button className="self-end" disabled={!customReady || !state.data} onClick={() => setShowGrowth(true)}>Generate report</Button>
         <div className="ml-auto flex flex-wrap items-end gap-2">
           <Select label="Report" value={report.kind} onChange={(e) => setReport({ ...report, kind: e.target.value })}>{REPORTS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Select>
           <Select label="Format" value={report.format} onChange={(e) => setReport({ ...report, format: e.target.value })}><option value="xlsx">Excel</option><option value="pdf">PDF</option></Select>
@@ -102,6 +105,7 @@ export default function AnalyticsPage() {
       <div className="mb-4 flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-800" role="tablist">
         {tabs.map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)} className={`whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium ${tab === k ? 'border-brand-600 text-brand-700 dark:text-brand-300' : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}>{l}</button>)}
       </div>
+      {showGrowth && state.data && <GrowthReport data={state.data} user={user} onClose={() => setShowGrowth(false)} />}
       {!customReady ? <EmptyState title="Choose a valid date range" /> : (
         <Async state={state}>{(d) => {
           const bl = (r) => bucketLabel(r.bucket, d.range.bucket);

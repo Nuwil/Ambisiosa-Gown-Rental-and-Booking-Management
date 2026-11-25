@@ -3,12 +3,13 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api/client.js';
 import { useCart } from '../cart/CartContext.jsx';
 import { useAuth } from '../../auth/AuthContext.jsx';
-import { Button, Input, Stepper, Textarea } from '../../components/ui/Controls.jsx';
+import { Button, Input, Portal, Stepper, Textarea } from '../../components/ui/Controls.jsx';
 import Icon from '../../components/ui/Icon.jsx';
+import { lockScroll } from '../../lib/scrollLock.js';
 import { Badge, StatusBadge } from '../../components/ui/Display.jsx';
 import { Async } from '../../components/ui/Feedback.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
-import { cx, daysBetween, peso, todayISO } from '../../lib/format.js';
+import { cx, daysBetween, isPastDate, peso, todayISO } from '../../lib/format.js';
 import { fieldErrors } from '../../lib/forms.js';
 import { useFetch } from '../../lib/useFetch.js';
 
@@ -17,10 +18,11 @@ function Lightbox({ images, index, onIndex, onClose, name }) {
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); if (e.key === 'ArrowLeft') go(-1); if (e.key === 'ArrowRight') go(1); };
     document.addEventListener('keydown', onKey);
-    const prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
+    const unlock = lockScroll();
+    return () => { document.removeEventListener('keydown', onKey); unlock(); };
   }, [go, onClose]);
   return (
+    <Portal>
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" role="dialog" aria-modal="true" aria-label={`${name} photos`} onClick={onClose}>
       <button aria-label="Close" className="absolute right-4 top-4 rounded-full bg-white/10 p-2.5 text-white transition-colors hover:bg-white/20" onClick={onClose}><Icon name="close" className="h-5 w-5" /></button>
       {images.length > 1 && <button aria-label="Previous photo" className="absolute left-3 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20" onClick={(e) => { e.stopPropagation(); go(-1); }}><Icon name="chevron-left" /></button>}
@@ -28,6 +30,7 @@ function Lightbox({ images, index, onIndex, onClose, name }) {
       {images.length > 1 && <button aria-label="Next photo" className="absolute right-3 rounded-full bg-white/10 p-3 text-white transition-colors hover:bg-white/20" onClick={(e) => { e.stopPropagation(); go(1); }}><Icon name="chevron-right" /></button>}
       <p className="absolute bottom-4 text-sm text-white/70">{index + 1} / {images.length}</p>
     </div>
+    </Portal>
   );
 }
 
@@ -92,7 +95,7 @@ function PurchasePanel({ item, dates, setDates }) {
     if (!(Number(quantity) >= 1)) v.quantity = 'Quantity must be at least 1';
     else if (variant && Number(quantity) > max) v.quantity = `Only ${max} available${type === 'rental' ? ' for these dates' : ''}`;
     if (type === 'rental') {
-      if (dates.start < todayISO()) v.start_date = 'Rental date cannot be in the past';
+      if (isPastDate(dates.start) || isPastDate(dates.end)) v.start_date = 'Rental date cannot be in the past';
       if (!validDates) v.expected_return = 'Return date must be on or after the rental date';
     }
     setErrors(v);
@@ -136,8 +139,8 @@ function PurchasePanel({ item, dates, setDates }) {
 
       {type === 'rental' && (
         <div className="grid gap-3 sm:grid-cols-2">
-          <Input label="Rental date" type="date" min={todayISO()} value={dates.start} onChange={(e) => setDates({ start: e.target.value, end: dates.end < e.target.value ? e.target.value : dates.end })} error={errors.start_date} />
-          <Input label="Return date" type="date" min={dates.start} value={dates.end} onChange={(e) => setDates({ ...dates, end: e.target.value })} error={errors.expected_return} />
+          <Input label="Rental date" type="date" min={todayISO()} value={dates.start} onChange={(e) => setDates({ start: e.target.value, end: dates.end < e.target.value ? e.target.value : dates.end })} error={errors.start_date || (isPastDate(dates.start) ? 'Rental date cannot be in the past' : undefined)} />
+          <Input label="Return date" type="date" min={dates.start > todayISO() ? dates.start : todayISO()} value={dates.end} onChange={(e) => setDates({ ...dates, end: e.target.value })} error={errors.expected_return} />
         </div>
       )}
 

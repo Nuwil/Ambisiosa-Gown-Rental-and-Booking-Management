@@ -4,6 +4,8 @@ import { useAuth, HOME } from '../../auth/AuthContext.jsx';
 import { Button, Input } from '../../components/ui/Controls.jsx';
 import Icon from '../../components/ui/Icon.jsx';
 import { useToast } from '../../components/ui/Toast.jsx';
+import GoogleButton, { OrDivider } from './GoogleButton.jsx';
+import VerifyEmailPanel, { NOT_VERIFIED } from './VerifyEmailPanel.jsx';
 import { DEMO_ACCOUNTS, DEMO_ENABLED, DEMO_MODE, resetDemoData } from './demoAccounts.js';
 
 function Shell({ title, subtitle, children, footer, after }) {
@@ -33,7 +35,7 @@ function Shell({ title, subtitle, children, footer, after }) {
 }
 
 export function LoginPage() {
-  const { user, login } = useAuth();
+  const { user, login, loginWithGoogle, completeLogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ email: '', password: '' });
@@ -41,6 +43,7 @@ export function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [demoOpen, setDemoOpen] = useState(true);
   const [demoBusy, setDemoBusy] = useState('');
+  const [verify, setVerify] = useState(null); // email awaiting its OTP
   const toast = useToast();
   if (user) return <Navigate to={HOME[user.role]} replace />;
 
@@ -50,10 +53,14 @@ export function LoginPage() {
       const u = await login(email.trim(), password);
       const from = location.state?.from;
       navigate(from && from.startsWith(HOME[u.role].split('/').slice(0, 2).join('/')) ? from : HOME[u.role], { replace: true });
-    } catch (err) { setError(err.message); } finally { setBusy(false); setDemoBusy(''); }
+    } catch (err) { if (err.status === 403 && NOT_VERIFIED.test(err.message)) setVerify(email.trim().toLowerCase()); else setError(err.message); } finally { setBusy(false); setDemoBusy(''); }
   };
+  const goHome = (u) => navigate(HOME[u.role], { replace: true });
+  const google = async (credential) => { setError(''); try { goHome(await loginWithGoogle(credential)); } catch (err) { setError(err.message); } };
   const submit = (e) => { e.preventDefault(); signIn(form.email, form.password); };
   const useDemo = (a) => { setDemoBusy(a.role); setForm({ email: a.email, password: a.password }); signIn(a.email, a.password); };
+
+  if (verify) return <Shell title="Verify your email" subtitle="Confirm it's really you to finish signing in." footer={null}><VerifyEmailPanel email={verify} onVerified={(u) => goHome(completeLogin(u))} onBack={() => setVerify(null)} /></Shell>;
 
   return (
     <Shell title="Welcome back" subtitle="Sign in to manage or book rentals." footer={<>New renter? <Link className="font-medium text-slate-900 underline underline-offset-4 decoration-slate-300 transition-colors hover:decoration-slate-900 dark:text-white dark:decoration-slate-600 dark:hover:decoration-white" to="/register">Create an account</Link></>}
@@ -90,17 +97,20 @@ export function LoginPage() {
         {error && <p role="alert" className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300">{error}</p>}
         <Button type="submit" loading={busy} className="w-full" disabled={!form.email || !form.password}>Sign in</Button>
       </form>
+      <OrDivider />
+      <GoogleButton onCredential={google} onError={setError} disabled={busy} />
     </Shell>
   );
 }
 
 export function RegisterPage() {
-  const { user, register } = useAuth();
+  const { user, register, completeLogin, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', address: '' });
   const [errors, setErrors] = useState({});
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState(null); // { email, demoCode } once the OTP has been emailed
   if (user) return <Navigate to={HOME[user.role]} replace />;
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
@@ -115,15 +125,18 @@ export function RegisterPage() {
     e.preventDefault(); setError('');
     if (!validate()) return;
     setBusy(true);
-    try { const u = await register({ ...form, phone: form.phone || null, address: form.address || null }); navigate(HOME[u.role], { replace: true }); }
+    try { const r = await register({ ...form, phone: form.phone || null, address: form.address || null }); setPending({ email: r.email, demoCode: r.demoCode }); }
     catch (err) { setError(err.message); } finally { setBusy(false); }
   };
+  const google = async (credential) => { setError(''); try { const u = await loginWithGoogle(credential); navigate(HOME[u.role], { replace: true }); } catch (err) { setError(err.message); } };
+
+  if (pending) return <Shell title="Verify your email" subtitle="One last step before your account is activated." footer={null}><VerifyEmailPanel email={pending.email} demoCode={pending.demoCode} onVerified={(u) => navigate(HOME[completeLogin(u).role], { replace: true })} onBack={() => setPending(null)} /></Shell>;
 
   return (
     <Shell title="Create your account" subtitle="Browse gowns, suits, costumes and traditional wear." footer={<>Already registered? <Link className="font-medium text-slate-900 underline underline-offset-4 decoration-slate-300 transition-colors hover:decoration-slate-900 dark:text-white dark:decoration-slate-600 dark:hover:decoration-white" to="/login">Sign in</Link></>}>
       <form onSubmit={submit} className="space-y-4" noValidate>
         <Input label="Full name" autoComplete="name" value={form.name} onChange={set('name')} error={errors.name} />
-        <Input label="Email" type="email" autoComplete="email" value={form.email} onChange={set('email')} error={errors.email} />
+        <Input label="Email" type="email" autoComplete="email" required hint="We'll email a 6-digit code to confirm it." value={form.email} onChange={set('email')} error={errors.email} />
         <Input label="Password" type="password" autoComplete="new-password" value={form.password} onChange={set('password')} error={errors.password} />
         <div className="grid gap-4 sm:grid-cols-2">
           <Input label="Phone (optional)" autoComplete="tel" value={form.phone} onChange={set('phone')} />
@@ -132,6 +145,8 @@ export function RegisterPage() {
         {error && <p role="alert" className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300">{error}</p>}
         <Button type="submit" loading={busy} className="w-full">Create account</Button>
       </form>
+      <OrDivider />
+      <GoogleButton onCredential={google} onError={setError} disabled={busy} />
     </Shell>
   );
 }

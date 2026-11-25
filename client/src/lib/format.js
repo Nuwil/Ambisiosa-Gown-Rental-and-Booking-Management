@@ -22,6 +22,8 @@ export const bucketLabel = (b, bucket) => {
   if (bucket === 'year') return b;
   return fmtDate(b).replace(/, \d{4}$/, '');
 };
-export const todayISO = () => new Date().toISOString().slice(0, 10);
+// Local calendar date (not UTC): in UTC+8 the UTC date is still "yesterday" until 08:00, which let past dates through.
+export const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+export const isPastDate = (v) => Boolean(v) && v < todayISO();
 export const daysBetween = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000) + 1;
 export const cx = (...c) => c.filter(Boolean).join(' ');

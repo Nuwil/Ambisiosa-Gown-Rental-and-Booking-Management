@@ -1,4 +1,6 @@
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { TransactionDetail } from '../../components/TransactionViews.jsx';
 import { useFetch } from '../../lib/useFetch.js';
 import { Async } from '../../components/ui/Feedback.jsx';
 import { ActionLink, Badge, Bento, PageHeader, Section, StatCard, StatusBadge, TypeBadge } from '../../components/ui/Display.jsx';
@@ -151,8 +153,13 @@ export function OwnerDashboard() {
 export function RenterDashboard() {
   const { user } = useAuth();
   const state = useFetch('/stats/dashboard');
+  const [params, setParams] = useSearchParams();
+  const [openTx, setOpenTx] = useState(Number(params.get('tx')) || null); // arrives from a notification
+  useEffect(() => { const t = Number(params.get('tx')); if (t) setOpenTx(t); }, [params]);
+  const closeTx = () => { setOpenTx(null); if (params.has('tx')) setParams((p) => { p.delete('tx'); return p; }, { replace: true }); };
   return (
     <>
+      <TransactionDetail id={openTx} role="renter" onClose={closeTx} onChanged={state.reload} />
       <PageHeader title={`Hello, ${user.name.split(' ')[0]}`} subtitle="Your rentals, purchases and reminders." actions={<Link to="/renter/items" className={buttonClass('primary', 'md')}>Browse items<Icon name="arrow-up-right" className="h-4 w-4" /></Link>} />
       <Async state={state}>{({ stats: s, recentTransactions, upcomingReturns, spendByMonth }) => (
         <div className="space-y-4">

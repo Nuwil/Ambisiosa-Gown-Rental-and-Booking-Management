@@ -5,14 +5,30 @@ import { validate } from '../../middleware/validate.js';
 import { authenticate, signToken, cookieOptions, COOKIE_NAME } from '../../middleware/auth.js';
 import { logActivity } from '../../utils/audit.js';
 import * as svc from './service.js';
-import { registerSchema, loginSchema, changePasswordSchema, profileSchema, themeSchema } from './schema.js';
+import { registerSchema, loginSchema, changePasswordSchema, profileSchema, themeSchema, verifyEmailSchema, resendCodeSchema, googleSchema } from './schema.js';
 
 const router = Router();
+const otpLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false, message: { message: 'Too many attempts, try again later' } });
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false, message: { message: 'Too many attempts, try again later' } });
 
 router.post('/register', limiter, validate({ body: registerSchema }), asyncHandler(async (req, res) => {
-  const user = await svc.registerRenter(req.body);
-  res.cookie(COOKIE_NAME, signToken(user), cookieOptions).status(201).json({ user });
+  const { email } = await svc.registerRenter(req.body);
+  res.status(202).json({ verificationRequired: true, email }); // no session until the emailed code is confirmed
+}));
+
+router.post('/verify-email', otpLimiter, validate({ body: verifyEmailSchema }), asyncHandler(async (req, res) => {
+  const user = await svc.verifyEmail(req.body);
+  res.cookie(COOKIE_NAME, signToken(user), cookieOptions).json({ user });
+}));
+
+router.post('/resend-code', otpLimiter, validate({ body: resendCodeSchema }), asyncHandler(async (req, res) => {
+  await svc.resendCode(req.body);
+  res.json({ ok: true });
+}));
+
+router.post('/google', limiter, validate({ body: googleSchema }), asyncHandler(async (req, res) => {
+  const user = await svc.loginWithGoogle(req.body);
+  res.cookie(COOKIE_NAME, signToken(user), cookieOptions).json({ user });
 }));
 
 router.post('/login', limiter, validate({ body: loginSchema }), asyncHandler(async (req, res) => {

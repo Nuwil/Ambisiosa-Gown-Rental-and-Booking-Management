@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 import Icon from '../components/ui/Icon.jsx';
 import NotificationBell from './NotificationBell.jsx';
 import { cx } from '../lib/format.js';
+import { releaseAllScrollLocks } from '../lib/scrollLock.js';
 import { CartProvider, useCart } from '../features/cart/CartContext.jsx';
 
 const NAV = {
@@ -52,6 +53,8 @@ function Layout() {
   const { user, logout, setTheme } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  // Safety net: never carry a stuck scroll lock to a new page when no dialog is actually open.
+  useEffect(() => { if (!document.querySelector('[aria-modal="true"]')) releaseAllScrollLocks(); }, [location.pathname]);
   const [open, setOpen] = useState(false);
   const dark = user.theme === 'dark';
   const brand = user.role === 'owner' || user.role === 'staff' ? user.shop_name || 'My Shop' : 'Atelier Rentals';

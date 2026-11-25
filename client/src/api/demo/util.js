@@ -37,7 +37,7 @@ export const paged = (rows, p, map = (r) => r) => pageResult(rows.slice(p.offset
 // ---- dates (UTC, like the server) ----
 const DAY = 86400000;
 export const iso = (d) => d.toISOString().slice(0, 10);
-export const today = () => iso(new Date());
+export const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }; // local day, matches the date pickers
 export const addDays = (s, n) => iso(new Date(new Date(`${s}T00:00:00Z`).getTime() + n * DAY));
 export const diffDays = (a, b) => Math.round((new Date(`${a}T00:00:00Z`) - new Date(`${b}T00:00:00Z`)) / DAY); // a - b
 export const inclusiveDays = (start, end) => diffDays(end, start) + 1;

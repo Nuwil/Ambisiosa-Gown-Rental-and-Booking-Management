@@ -20,7 +20,7 @@ export function Pagination({ meta, onPage }) {
  * columns: [{ header, cell: (row) => node, className?, hideBelow?: 'md'|'lg' }]
  * `result` is the paged API response ({ data, meta }) from useFetch.
  */
-export default function DataTable({ columns, result, loading, onPage, onRowClick, empty, rowKey = (r) => r.id }) {
+export default function DataTable({ columns, result, loading, onPage, onRowClick, empty, rowKey = (r) => r.id, rowClassName }) {
   const rows = result?.data ?? [];
   return (
     <div className="relative">
@@ -36,7 +36,7 @@ export default function DataTable({ columns, result, loading, onPage, onRowClick
             <tbody className={cx('divide-y divide-slate-100 transition-opacity dark:divide-slate-800/70', loading && 'opacity-60')}>
               {rows.map((r) => (
                 <tr key={rowKey(r)} onClick={onRowClick ? () => onRowClick(r) : undefined}
-                  className={cx('transition-colors duration-150', onRowClick && 'cursor-pointer hover:bg-slate-100/60 dark:hover:bg-slate-800/50')}>
+                  className={cx('transition-colors duration-150', rowClassName?.(r), onRowClick && 'cursor-pointer hover:bg-slate-100/60 dark:hover:bg-slate-800/50')}>
                   {columns.map((c, i) => <td key={i} className={cx('td', c.className, c.hideBelow === 'md' && 'hidden md:table-cell', c.hideBelow === 'lg' && 'hidden lg:table-cell')}>{c.cell(r)}</td>)}
                 </tr>
               ))}

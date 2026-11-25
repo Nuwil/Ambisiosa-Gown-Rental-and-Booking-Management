@@ -23,7 +23,10 @@ export function AuthProvider({ children }) {
   }, [setSession]);
 
   const login = useCallback(async (email, password) => { const r = await api.post('/auth/login', { email, password }); setSession(r.user); return r.user; }, [setSession]);
-  const register = useCallback(async (data) => { const r = await api.post('/auth/register', data); setSession(r.user); return r.user; }, [setSession]);
+  // Registration no longer starts a session: it returns { verificationRequired, email } and the emailed code is confirmed via verifyEmail.
+  const register = useCallback((data) => api.post('/auth/register', data), []);
+  const completeLogin = useCallback((u) => { setSession(u); return u; }, [setSession]);
+  const loginWithGoogle = useCallback(async (credential) => { const r = await api.post('/auth/google', { credential }); setSession(r.user); return r.user; }, [setSession]);
   const logout = useCallback(async () => { try { await api.post('/auth/logout'); } finally { setUser(null); } }, []);
   const updateProfile = useCallback(async (data) => { const r = await api.put('/auth/profile', data); setUser(r.user); return r.user; }, []);
   const setTheme = useCallback(async (theme) => {
@@ -32,6 +35,6 @@ export function AuthProvider({ children }) {
     try { await api.put('/auth/theme', { theme }); } catch { /* UI already updated; will resync next login */ }
   }, []);
 
-  const value = useMemo(() => ({ user, loading, login, register, logout, updateProfile, setTheme }), [user, loading, login, register, logout, updateProfile, setTheme]);
+  const value = useMemo(() => ({ user, loading, login, register, completeLogin, loginWithGoogle, logout, updateProfile, setTheme }), [user, loading, login, register, completeLogin, loginWithGoogle, logout, updateProfile, setTheme]);
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }

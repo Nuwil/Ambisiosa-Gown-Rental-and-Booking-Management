@@ -8,6 +8,7 @@ import { LoginPage, RegisterPage } from './features/auth/AuthPages.jsx';
 import { AdminDashboard, OwnerDashboard, RenterDashboard } from './features/shared/Dashboards.jsx';
 import StaffPage from './features/owner/StaffPage.jsx';
 import SettingsPage from './features/shared/SettingsPage.jsx';
+import NotificationsPage from './features/shared/NotificationsPage.jsx';
 import CustomersPage from './features/owner/CustomersPage.jsx';
 import CustomerProfilePage from './features/owner/CustomerProfilePage.jsx';
 import OwnerTransactionsPage from './features/owner/TransactionsPage.jsx';
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="oversight" element={<OversightPage />} />
             <Route path="settings" element={<AdminSettingsPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
           </Route>
         </Route>
 
@@ -61,6 +63,7 @@ export default function App() {
               <Route path="inventory" element={<InventoryPage />} />
             </Route>
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
             <Route element={<ProtectedRoute roles={['owner']} />}>
               <Route path="analytics" element={<AnalyticsPage />} />
               <Route path="staff" element={<StaffPage />} />
@@ -75,6 +78,7 @@ export default function App() {
             <Route path="items" element={<BrowsePage />} />
             <Route path="items/:id" element={<ItemDetailPage />} />
             <Route path="cart" element={<CartPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
         </Route>

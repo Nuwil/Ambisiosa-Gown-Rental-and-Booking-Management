@@ -1,4 +1,5 @@
 import { q } from '../../config/db.js';
+import { env } from '../../config/env.js';
 
 /**
  * Availability is DERIVED, never stored: total_quantity minus overlapping reservations.
@@ -18,7 +19,8 @@ export const RESERVED_SUBQUERY = `
     )
   ), 0)`;
 
-export const today = () => new Date().toISOString().slice(0, 10);
+// "Today" in the shop's timezone (APP_TIMEZONE), so a booking made late in the evening is not judged against UTC's date.
+export const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: env.timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 
 /** Returns variants (with `reserved` and `available`) for the given item ids over [start, end]. */
 export async function variantsWithAvailability(itemIds, start = today(), end = start, conn) {
